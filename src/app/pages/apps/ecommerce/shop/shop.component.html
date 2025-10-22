@@ -1,14 +1,12 @@
 <mat-card class="cardWithShadow overflow-hidden position-relative">
   <mat-sidenav-container class="email-box">
-  <mat-sidenav #mailnav [mode]="isOver() ? 'over' : 'side'" [opened]="!isOver()" class="mail-sidebar" [style.width.px]="isOver() ? mobileSidenavWidth : null" [fixedInViewport]="isOver()" [fixedTopGap]="0" [fixedBottomGap]="0">
-      @if(isOver()){
+  <mat-sidenav #mailnav mode="over" class="mail-sidebar" [style.width.px]="mobileSidenavWidth">
       <div class="mobile-filters-header d-flex align-items-center justify-content-between">
         <h6 class="m-0 f-s-14 f-w-600">Filtros</h6>
-        <button mat-icon-button (click)="closeFilters(mailnav)" aria-label="Cerrar filtros">
+        <button mat-icon-button (click)="mailnav.close()" aria-label="Cerrar filtros">
           <mat-icon>close</mat-icon>
         </button>
       </div>
-      }
   <ng-scrollbar class="position-relative mobile-filters-scroll" style="height: 100%">
         <div class="p-16">
           <!-- Add New Product button removed -->
@@ -57,16 +55,14 @@
       </ng-scrollbar>
     </mat-sidenav>
     <mat-sidenav-content>
-  <div class="p-24 content-wrapper">
-  <div class="shop-navbar-fixed d-flex align-items-center gap-16 p-y-12 p-x-16 b-1 bg-white">
-          @if(isMobileView){
-            <button mat-icon-button class="bg-primary text-white" (click)="mailnav.toggle()" aria-label="Abrir filtros">
-              <mat-icon>menu</mat-icon>
-            </button>
-          }
+  <div class="content-wrapper p-sm-0">
+  <div class="shop-navbar-fixed d-flex align-items-center gap-16 p-y-12 p-x-16 p-sm-12 b-1 bg-white">
+          <button mat-icon-button class="bg-primary text-white" (click)="mailnav.toggle()" aria-label="Abrir filtros">
+            <mat-icon>menu</mat-icon>
+          </button>
           <h6 class="m-0 f-s-18 f-w-600 d-none d-md-block">Productos</h6>
           <div class="flex-grow-1 d-flex justify-content-end">
-            <mat-form-field class="hide-hint w-100 w-md-40" appearance="outline">
+            <mat-form-field class="hide-hint search-field" appearance="outline">
               <mat-icon matPrefix>search</mat-icon>
               <input matInput placeholder="Buscar producto" [(ngModel)]="searchText" (ngModelChange)="filterCards()" />
               @if(searchText){
@@ -75,44 +71,63 @@
             </mat-form-field>
           </div>
         </div>
-  <div class="row m-t-navbar">
-          @for(productcard of filteredCards; track productcard.product_name) {
-          <div class="col-sm-6 col-lg-4 p-x-12">
-            <mat-card class="cardWithShadow productcard overflow-hidden b-1 cursor-pointer" (click)="getviewDetails(productcard)">
-              <a routerLink="/widgets/cards">
-                <div class="img-wrapper position-relative">
-                  <img [src]="productcard.imagePath" alt="imgSrc" class="w-100" mat-card-image />
-                  <div class="d-flex align-items-center icon-container">
-                    <!-- Botón eliminar removido -->
-                    <!-- Edit product button removed -->
-                  </div>
-                </div>
-              </a>
-              <mat-card-content class="p-b-24 p-t-12 position-relative">
-                <mat-card-title class="mat-headline-2 f-s-16 m-b-4 text-ellipsis text-nowrap">{{ productcard.product_name }}</mat-card-title>
-                <div class="d-flex align-items-center justify-content-between">
-                  <div class="d-flex align-items-center">
-                    <h6 class="f-s-16 f-w-600">${{ productcard.base_price }}</h6>
-                    <span class="f-s-14 m-l-8 text-decoration-line-through">${{ productcard.dealPrice }}</span>
-                  </div>
-                  <div class="d-flex align-items-center gap-1">
-                    @if(productcard.rating !== undefined){
-                    @for (star of [1, 2, 3, 4, 5]; track star) {<i-tabler name="star" class="icon-17 text-warning" [ngClass]="getStarClass(star, productcard.rating )"></i-tabler>}
-                    }
-                  </div>
-                </div>
-              </mat-card-content>
-            </mat-card>
+  <div class="row m-t-navbar shop-grid">
+    @if(loading && page===1){
+      <!-- Skeleton initial load -->
+      @for(s of [1,2,3,4,5,6,7,8]; track s){
+  <div class="col-6 col-sm-6 col-lg-3 p-x-12 p-sm-0 m-b-24 shop-skeleton-wrapper">
+          <div class="skeleton-card">
+            <div class="skeleton-img"></div>
+            <div class="skeleton-footer">
+              <div class="skeleton-bar long"></div>
+              <div class="skeleton-bar short"></div>
+            </div>
           </div>
-          }@empty {
-          <div class="col-12 text-center p-4 m-t-30">
-            <img src="assets/images/products/empty-shopping-cart.svg" width="200" height="200" />
-            <div class="f-s-48 f-w-600">No hay productos</div>
-            <div class="f-s-14 f-w-500">El producto que buscas no está disponible.</div>
-            <button mat-flat-button (click)="getProductList()" class="m-t-10">Intentar nuevamente</button>
-          </div>
-          }
         </div>
+      }
+    } @else { 
+      @for(productcard of filteredCards; track productcard.product_name) {
+  <div class="col-6 col-sm-6 col-lg-3 p-x-12 p-sm-0">
+          <mat-card class="cardWithShadow productcard overflow-hidden b-1 cursor-pointer" (click)="getviewDetails(productcard)">
+            <a routerLink="/widgets/cards">
+              <div class="img-wrapper position-relative">
+                <img [src]="productcard.imagePath" alt="imgSrc" class="w-100" mat-card-image />
+                <div class="d-flex align-items-center icon-container">
+                  <!-- Botón eliminar removido -->
+                  <!-- Edit product button removed -->
+                </div>
+              </div>
+            </a>
+            <mat-card-content class="p-b-24 p-t-12 position-relative">
+              <mat-card-title class="mat-headline-2 f-s-16 m-b-4 product-title text-ellipsis">{{ productcard.product_name }}</mat-card-title>
+              <div class="product-meta-line d-flex align-items-center justify-content-between">
+                <div class="price-line d-flex align-items-center">
+                  @if(productcard.dealPrice && productcard.dealPrice < productcard.base_price){
+                    <span class="price-old f-s-14 f-w-500 m-r-6" aria-label="Precio anterior">${{ productcard.base_price }}</span>
+                    <h6 class="price-current f-s-16 f-w-600 m-0 text-primary" aria-label="Precio con descuento">${{ productcard.dealPrice }}</h6>
+                  } @else {
+                    <h6 class="price-current f-s-16 f-w-600 m-0" aria-label="Precio">${{ productcard.base_price }}</h6>
+                  }
+                </div>
+                <div class="stars-line d-flex align-items-center gap-1">
+                  @if(productcard.rating !== undefined){
+                    @for (star of [1,2,3,4,5]; track star){<i-tabler name="star" class="icon-17 text-warning" [ngClass]="getStarClass(star, productcard.rating )"></i-tabler>}
+                  }
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+      }@empty {
+        <div class="col-12 text-center p-4 m-t-30">
+          <img src="assets/images/products/empty-shopping-cart.svg" width="200" height="200" />
+          <div class="f-s-48 f-w-600">No hay productos</div>
+          <div class="f-s-14 f-w-500">El producto que buscas no está disponible.</div>
+          <button mat-flat-button (click)="getProductList()" class="m-t-10">Intentar nuevamente</button>
+        </div>
+      }
+    }
+  </div>
         <div class="d-flex justify-content-center m-y-16" *ngIf="loading">
           <mat-progress-spinner diameter="32" mode="indeterminate"></mat-progress-spinner>
         </div>

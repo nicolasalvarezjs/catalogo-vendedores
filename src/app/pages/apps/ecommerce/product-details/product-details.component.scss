@@ -22,12 +22,139 @@
 	0% { background-position: 100% 0; }
 	100% { background-position: 0 0; }
 }
+/* Navbar fijo similar al de shop */
+.details-navbar-fixed {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	z-index: 110;
+	/* un poco mayor por si se superpone con carrusel */
+	background: var(--mat-sys-surface, #fff);
+	border-bottom: 1px solid var(--mat-sys-outline-variant, #e0e0e0);
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+	display: flex;
+	align-items: center;
+
+	.mat-icon {
+		font-size: 20px;
+	}
+}
+
+/* Margen superior para el contenido bajo el navbar */
+.m-t-navbar-details {
+	margin-top: 84px;
+}
+
+@media (max-width: 767px) {
+	.m-t-navbar-details {
+		margin-top: 74px;
+	}
+}
 .border-style{border-color: var(--mat-sys-secondary)}
 .mat-card{min-height:100%;}
 .progress{flex-grow:1;width:25px;height:8px;border-radius:4px;background-color:#fcfafa;}
 .count{width:50px;text-align:right;font-size:14px;}
 .cards-circle{width:25px;height:25px;border-radius:var(--mat-sys-corner-full);display:flex;align-items:center;justify-content:center;background-color:var(--mat-sys-primary); .theme-icon{display:none;} &.selected{ .theme-icon{display:block;color:white;width:18px;height:18px;} }}
 
+/* Botones sociales del vendedor (alineación corregida) */
+.vendor-socials {
+	display: flex;
+	flex-wrap: nowrap;
+	gap: 12px;
+	width: 100%;
+	justify-content: flex-start;
+	overflow: hidden;
+
+	.social-btn {
+		flex: 1 1 0;
+		white-space: nowrap;
+		text-overflow: ellipsis;
+		overflow: hidden;
+		min-width: 0;
+	}
+
+	/* Si faltan botones, mantener proporciones sin crecer gigantes */
+	&:has(.social-btn:last-child) {
+		.social-btn {
+			max-width: 33.333%;
+		}
+	}
+
+	/* Ajuste en pantallas muy pequeñas: reducir padding horizontal para que quepan los 3 */
+	@media (max-width: 420px) {
+		.social-btn {
+			padding: 0 10px;
+			font-size: 13px;
+		}
+
+		.social-btn span {
+			font-size: 13px;
+		}
+
+		gap: 8px;
+	}
+
+	@media (max-width: 360px) {
+		.social-btn {
+			padding: 0 8px;
+		}
+
+		gap: 6px;
+
+		.social-btn span {
+			display: none;
+		}
+
+		/* Mostrar solo íconos si el ancho es extremadamente reducido */
+	}
+
+	.social-btn {
+		height: 40px;
+		padding: 0 16px;
+		border-radius: 6px;
+		text-decoration: none;
+		gap: 10px;
+		font-weight: 500;
+		line-height: 40px;
+		transition: background-color .2s ease, box-shadow .2s ease, transform .15s ease;
+
+		i-tabler,
+		.mat-icon {
+			width: 20px;
+			height: 20px;
+			line-height: 20px;
+		}
+
+		span {
+			display: inline-flex;
+			align-items: center;
+			line-height: 20px;
+			font-size: 14px;
+		}
+
+		&:hover {
+			box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+			transform: translateY(-2px);
+		}
+
+		&:active {
+			transform: translateY(0);
+		}
+	}
+
+	.whatsapp {
+		background-color: #25D366 !important;
+	}
+
+	.facebook {
+		background-color: #1877F2 !important;
+	}
+
+	.web {
+		background-color: var(--mat-sys-primary) !important;
+	}
+}
 /* Responsive ajustes: tablet (<= 1199px) hacia abajo */
 @media (max-width: 1199px) {
 	.details-wrapper { padding: 0 !important; }
@@ -51,3 +178,57 @@
 .product-carousel .owl-stage-outer { width:100%; }
 .product-carousel .owl-item img { display:block; width:100%; height:auto; }
 .product-carousel .owl-stage { display:flex; }
+
+/* Anti-bounce y ajuste mobile similar a shop */
+@media (max-width: 575.98px) {
+	.details-wrapper {
+		padding-left: 0 !important;
+		padding-right: 0 !important;
+		overflow-x: hidden;
+	}
+
+	.details-wrapper .row {
+		margin-left: 0 !important;
+		margin-right: 0 !important;
+	}
+
+	.details-wrapper .row>[class*='col-'] {
+		padding-left: 0 !important;
+		padding-right: 0 !important;
+		min-width: 0;
+	}
+
+	/* Ajustar paddings de las cards internas para mantener respiración */
+	.details-wrapper .details-card.p-30 {
+		padding: 18px !important;
+	}
+
+	.details-navbar-fixed {
+		padding-left: 12px !important;
+		padding-right: 12px !important;
+	}
+
+	body,
+	.app-shell {
+		overflow-x: hidden !important;
+	}
+}
+
+/* Precio anterior con línea arriba (overline) */
+.price-old {
+	position: relative;
+	display: inline-block;
+	color: #888;
+	padding-top: 2px;
+}
+
+.price-old::before {
+	content: "";
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 0.4em;
+	height: 1px;
+	background: currentColor;
+	opacity: 0.9;
+}

@@ -3,6 +3,11 @@ export interface Vendor {
   name: string; // nombre visible
   logoPath?: string; // opcional: logo del vendedor
   rating?: number; // rating agregado del vendedor
+  socials?: {
+    whatsapp?: string; // número en formato internacional sin '+' ej: 5491122334455
+    web?: string; // URL del sitio
+    facebook?: string; // URL de la página de Facebook
+  };
 }
 
 export interface Element {
@@ -32,9 +37,33 @@ interface productcards {
 }
 
 export const VENDORS: Vendor[] = [
-  { id: 'v-alfa', name: 'Alfa Distribuciones', rating: 4.6 },
-  { id: 'v-bravo', name: 'Bravo Retail', rating: 4.3 },
-  { id: 'v-charlie', name: 'Charlie Imports', rating: 4.8 },
+  {
+    id: 'v-alfa',
+    name: 'Alfa Distribuciones',
+    rating: 4.6,
+    socials: {
+      whatsapp: '5491160012233',
+      web: 'https://alfa.example.com',
+      facebook: 'https://facebook.com/alfa',
+    },
+  },
+  {
+    id: 'v-bravo',
+    name: 'Bravo Retail',
+    rating: 4.3,
+    socials: {
+      web: 'https://bravo.example.com',
+    },
+  },
+  {
+    id: 'v-charlie',
+    name: 'Charlie Imports',
+    rating: 4.8,
+    socials: {
+      whatsapp: '5491155599911',
+      facebook: 'https://facebook.com/charlieimports',
+    },
+  },
 ];
 
 const BASE_PRODUCTS: Element[] = [

@@ -4,8 +4,69 @@ html,
 body {
     height: 100%;
     margin: 0;
+        overscroll-behavior: contain;
+            touch-action: pan-y; // permite scroll vertical normal, bloquea gestos horizontales que generan rebote vertical
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        /* Evitar desplazamiento vertical mínimo al arrastrar horizontal en contenedores específicos */
+        .no-bounce,
+        .shop-grid,
+        .details-wrapper {
+            overscroll-behavior: none;
+        }
+        
+        /* Forzar ocultar scroll horizontal fantasma en móvil */
+        html,
+        body {
+            overflow-x: hidden;
 }
 
+/* App shell prevents vertical bounce on horizontal drags */
+.app-shell {
+    height: 100dvh;
+    /* viewport height stable on mobile, avoids iOS address bar reflow */
+    overscroll-behavior-y: none;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Optional: prevent double scroll on nested containers */
+.app-shell>* {
+    flex: 1 0 auto;
+}
+
+@supports (scrollbar-gutter: stable) {
+    .app-shell {
+        scrollbar-gutter: stable both-edges;
+    }
+}
 // Estilos pre-construidos de ngx-owl-carousel-o
 @import 'ngx-owl-carousel-o/lib/styles/scss/owl.carousel';
 @import 'ngx-owl-carousel-o/lib/styles/scss/owl.theme.default';
+
+// Full-screen dialog para detalles de producto
+.product-details-dialog.mat-dialog-container {
+    padding: 0 !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    border-radius: 0 !important;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.product-details-dialog .details-navbar-fixed {
+    position: sticky;
+    top: 0;
+}
+
+// Asegurar scroll interno independiente
+.product-details-dialog .details-wrapper {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}

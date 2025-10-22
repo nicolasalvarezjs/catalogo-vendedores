@@ -1,4 +1,11 @@
-<div class="details-wrapper p-16">
+<div class="details-navbar-fixed d-flex align-items-center gap-12 p-y-12 p-x-16 b-1 bg-white">
+  <button mat-icon-button class="bg-primary text-white" (click)="getBack()" aria-label="Volver">
+    <mat-icon>arrow_back</mat-icon>
+  </button>
+  <h6 class="m-0 f-s-16 f-w-600 text-ellipsis" *ngIf="product?.product_name; else loadingTitle">{{ product?.product_name }}</h6>
+  <ng-template #loadingTitle><span class="f-s-14 text-muted">Cargando...</span></ng-template>
+</div>
+<div class="details-wrapper p-16 p-sm-0 m-t-navbar-details">
 @if(loading){
   <div class="skeleton-wrapper">
     <div class="row">
@@ -20,16 +27,14 @@
     <div class="skeleton skeleton-tab m-b-24"></div>
     <div class="row">
       @for(i of [1,2,3,4]; track i){
-      <div class="col-sm-6 col-lg-3 m-b-16">
+      <div class="col-sm-6 col-lg-3 m-b-16 p-0">
         <div class="skeleton skeleton-card w-100"></div>
       </div>
       }
     </div>
   </div>
 } @else {
-<div class="d-flex align-items-center m-b-10">
-  <button mat-flat-button (click)="getBack()" class="w-30">Volver</button>
-</div>
+<!-- Botón volver reemplazado por navbar fijo -->
 }
 <mat-card class="cardWithShadow b-1 rounded p-30 details-card">
   <div class="row">
@@ -47,18 +52,22 @@
       }
     </div>
     <div class="col-lg-6">
-      <div class="d-flex align-items-center">
-  <span class="bg-success rounded-pill p-x-8 text-white f-s-12">{{ product?.status ? 'En stock' : 'Sin stock' }}</span>
-  <span class="bg-light text-black f-s-12 m-x-10"> Libros</span>
-      </div>
+    <!-- Chips de estado y categoría removidos temporalmente -->
   <h3 class="m-t-10 f-w-600">{{ product?.product_name }}</h3>
   @if(vendor){<div class="f-s-14 m-t-4">Vendedor: <span class="f-w-600">{{ vendor.name }}</span></div>}
   <p class="m-t-1 f-s-14 f-w-500">{{ product?.description || 'Descripción no disponible.' }}</p>
-      <div class="d-flex align-items-center">
-    <del class="f-s-16 f-w-600">${{ product?.base_price }}</del>
-    <span class="f-s-20 f-w-600 m-x-2">${{ product?.dealPrice || 134}}</span>
-  <span class="f-s-14 f-w-600 m-x-5">({{ product?.discountPercent || 14 }}% de descuento)</span>
-      </div>
+      <ng-container *ngIf="product as p">
+        <div class="d-flex align-items-center price-block m-t-4">
+          <ng-container *ngIf="p.dealPrice !== undefined && p.base_price !== undefined && p.dealPrice < p.base_price; else baseOnly">
+            <span class="price-old f-s-16 f-w-600 m-r-8" aria-label="Precio anterior">${{ p.base_price }}</span>
+            <span class="f-s-20 f-w-600 text-primary" aria-label="Precio con descuento">${{ p.dealPrice }}</span>
+            <span class="f-s-14 f-w-600 m-l-8 text-success">({{ p.discountPercent || (((p.base_price - p.dealPrice) / p.base_price) * 100) | number:'1.0-0' }}% OFF)</span>
+          </ng-container>
+          <ng-template #baseOnly>
+            <span class="f-s-20 f-w-600">${{ p?.base_price }}</span>
+          </ng-template>
+        </div>
+      </ng-container>
       <div class="m-y-24 d-flex ">
         <div class="d-flex gap-4 m-t-5">
           @if(product?.rating !== undefined){ @for (star of [1, 2, 3, 4, 5]; track star) {
@@ -66,7 +75,9 @@
             <i-tabler name="star" class="icon-18 text-warning" [ngClass]="getStarClass(star, product?.rating )"></i-tabler>
           </span> } }
         </div>
-  <a href="#" class="text-primary f-s-14 f-w-600 text-decoration-none position-absolute m-x-10 m-t-5">236 reseñas</a>
+        <!-- Reseñas deshabilitadas temporalmente: enlace a reseñas
+        <a href="#" class="text-primary f-s-14 f-w-600 text-decoration-none position-absolute m-x-10 m-t-5">236 reseñas</a>
+        -->
       </div>
       <mat-divider></mat-divider>
       <div class="d-flex align-items-center">
@@ -84,9 +95,36 @@
         </mat-button-toggle-group>
       </div>
       <mat-divider></mat-divider>
-      <div class="d-flex align-items-center gap-20 m-y-20">
-  <button mat-flat-button class="p-y-20">Comprar ahora</button>
-  <button mat-flat-button class="bg-error text-white">Agregar al carrito</button>
+  <div class="d-flex align-items-center m-y-20 vendor-socials">
+        <!-- Botones sociales del vendedor (WhatsApp / Web / Facebook) -->
+        @if(vendor?.socials){
+          @if(vendor?.socials?.whatsapp){
+            <a mat-flat-button class="social-btn whatsapp bg-success text-white" [href]="getWhatsappLink(vendor?.socials?.whatsapp || '')" target="_blank" rel="noopener noreferrer">
+              <div class="d-flex align-items-center">
+                <i-tabler name="brand-whatsapp" class="icon-18 m-r-6"></i-tabler>
+                <span>WhatsApp</span>
+              </div>
+            </a>
+          }
+          @if(vendor?.socials?.web){
+            <a mat-flat-button class="social-btn web bg-primary text-white" [href]="vendor?.socials?.web" target="_blank" rel="noopener noreferrer">
+              <div class="d-flex align-items-center">
+                <i-tabler name="world-www" class="icon-18 m-r-6"></i-tabler>
+                <span>Web</span>
+              </div>
+            </a>
+          }
+          @if(vendor?.socials?.facebook){
+            <a mat-flat-button class="social-btn facebook bg-primary text-white" [href]="vendor?.socials?.facebook" target="_blank" rel="noopener noreferrer">
+              <div class="d-flex align-items-center">
+
+                <i-tabler name="brand-facebook" class="icon-18 m-r-6"></i-tabler>
+                <span>Facebook</span>
+              </div>
+            </a>
+          }
+        }
+        <!-- Botón de carrito removido temporalmente -->
       </div>
       <p class="m-t-10">Despachado en 2–3 semanas<br />
         <a href="#" class="text-primary text-decoration-none f-s-14 f-w-500">¿Por qué el tiempo de entrega es mayor?</a>
@@ -102,8 +140,9 @@
       <p class="f-s-14 f-w-400 m-y-30">Cras eget elit semper, congue sapien id, pellentesque diam. Nulla faucibus diam nec fermentum ullamcorper. Praesent sed ipsum ut augue vestibulum malesuada. Duis vitae volutpat odio. Integer sit amet elit ac justo sagittis dignissim.</p>
       <p class="f-s-14 f-w-400">Vivamus quis metus in nunc semper efficitur eget vitae diam. Proin justo diam, venenatis sit amet eros in, iaculis auctor magna. Pellentesque sit amet accumsan urna, sit amet pretium ipsum. Fusce condimentum venenatis mauris et luctus. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae.</p>
     </mat-tab>
+    <!--
     <mat-tab>
-  <ng-template mat-tab-label><span [class.text-primary]="selectedTabIndex === 1">Reseñas</span></ng-template>
+      <ng-template mat-tab-label><span [class.text-primary]="selectedTabIndex === 1">Reseñas</span></ng-template>
       <div class="row m-t-24 gap-0 w-100" >
         <div class="col-lg-4 d-flex">
           <mat-card class="cardWithShadow b-1 rounded w-100 h-80 d-flex justify-content-center align-items-center">
@@ -143,6 +182,7 @@
         </div>
       </div>
     </mat-tab>
+    -->
   </mat-tab-group>
 </mat-card>
 <mat-card class="p-10">
@@ -150,7 +190,7 @@
   <div class="row">
     @if(vendorProducts.length > 0){
     @for(productcard of vendorProducts; track productcard.id) {
-    <div class="col-sm-6 col-lg-3">
+    <div class="col-sm-6 col-lg-3 p-0">
       <mat-card class="cardWithShadow productcard overflow-hidden">
   <a (click)="viewVendorProduct(productcard)">
           <img [src]="productcard.imagePath" [alt]="productcard.product_name" class="w-100" mat-card-image />
@@ -158,9 +198,13 @@
         <mat-card-content class="p-b-24 p-t-12 position-relative">
           <mat-card-title class="mat-headline-2 f-s-16 m-b-4">{{ productcard.product_name }}</mat-card-title>
           <div class="d-flex align-items-center justify-content-between">
-            <div class="d-flex align-items-center">
-              <h6 class="f-s-16 f-w-600">${{ productcard.base_price }}</h6>
-              <span class="f-s-14 m-l-4 text-decoration-line-through">${{ productcard.dealPrice }}</span>
+            <div class="d-flex align-items-center price-line">
+              @if(productcard.dealPrice && productcard.dealPrice < productcard.base_price){
+                <span class="price-old f-s-14 f-w-500 m-r-6" aria-label="Precio anterior">${{ productcard.base_price }}</span>
+                <h6 class="f-s-16 f-w-600 m-0 text-primary" aria-label="Precio con descuento">${{ productcard.dealPrice }}</h6>
+              } @else {
+                <h6 class="f-s-16 f-w-600 m-0" aria-label="Precio">${{ productcard.base_price }}</h6>
+              }
             </div>
             <div class="m-l-auto d-flex gap-4">
               @if(productcard.rating !== undefined){ @for (star of [1, 2, 3, 4, 5]; track star) {

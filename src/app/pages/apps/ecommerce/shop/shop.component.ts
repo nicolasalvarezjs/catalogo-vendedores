@@ -5,26 +5,40 @@ import { IconModule } from 'src/app/icon/icon.module';
 import { MaterialModule } from 'src/app/material.module';
 import { NgScrollbarModule } from 'ngx-scrollbar';
 import { Router } from '@angular/router';
-import { MediaMatcher } from '@angular/cdk/layout';
+import { MatDialog } from '@angular/material/dialog';
+import { ProductDetailsComponent } from '../product-details/product-details.component';
 import { ProductService } from 'src/app/services/apps/product/product.service';
 import { Element } from '../ecommerceData';
-import { MockProductApiService, ProductListItem } from 'src/app/services/apps/product/mock-product-api.service';
+import {
+  MockProductApiService,
+  ProductListItem,
+} from 'src/app/services/apps/product/mock-product-api.service';
 
-export interface Section { key: string; label: string; icon: string; }
+export interface Section {
+  key: string;
+  label: string;
+  icon: string;
+}
 
 @Component({
   selector: 'app-shop',
-  imports: [MaterialModule, IconModule, CommonModule, FormsModule, NgScrollbarModule],
+  imports: [
+    MaterialModule,
+    IconModule,
+    CommonModule,
+    FormsModule,
+    NgScrollbarModule,
+  ],
   templateUrl: './shop.component.html',
-  styleUrl: './shop.component.scss'
+  styleUrl: './shop.component.scss',
 })
 export class ShopComponent implements OnInit, AfterViewInit {
   @ViewChild('infiniteAnchor', { static: false }) infiniteAnchor!: ElementRef;
   private router = inject(Router);
+  private dialog = inject(MatDialog);
   private cdr = inject(ChangeDetectorRef);
   private productService = inject(ProductService);
-  mobileQuery: MediaQueryList;
-  private mediaMatcher: MediaQueryList = matchMedia(`(max-width: 1199px)`);
+  // Sidebar responsive logic removido: siempre modo overlay manejado por botón.
   durationInSeconds = 1;
   searchText: string = '';
   allProducts: ProductListItem[] = [];
@@ -44,13 +58,21 @@ export class ShopComponent implements OnInit, AfterViewInit {
   selectedCategory: string = this.folders[0].key;
   notes: Section[] = [
     { key: 'newest', label: 'Más nuevo', icon: 'calendar' },
-    { key: 'price_high_low', label: 'Precio: Alto-Bajo', icon: 'sort-descending' },
-    { key: 'price_low_high', label: 'Precio: Bajo-Alto', icon: 'sort-ascending' },
+    {
+      key: 'price_high_low',
+      label: 'Precio: Alto-Bajo',
+      icon: 'sort-descending',
+    },
+    {
+      key: 'price_low_high',
+      label: 'Precio: Bajo-Alto',
+      icon: 'sort-ascending',
+    },
     { key: 'discounted', label: 'Con descuento', icon: 'percentage' },
   ];
   selectedSortBy: string = this.notes[0].key;
   selectedColor: string | null = null;
-  isMobileView = false;
+  // isMobileView removido (ya no se necesita para mostrar el botón de filtros).
   selectedGender: string = 'all';
   genderOptions = [
     { label: 'Todos', value: 'all' },
@@ -68,143 +90,188 @@ export class ShopComponent implements OnInit, AfterViewInit {
   ];
   // Ancho deseado del panel de filtros en modo móvil (px)
   mobileSidenavWidth = 300;
-  constructor(private api: MockProductApiService) {
-    const media = inject(MediaMatcher);
-    this.mobileQuery = media.matchMedia('(max-width: 1199px)');
-    this.isMobileView = this.mobileQuery.matches;
-    this.mobileQuery.addEventListener('change', (e) => { this.isMobileView = e.matches; });
-  }
+  constructor(private api: MockProductApiService) {}
   ngOnInit(): void {
-  // Restaurar estado de filtros/búsqueda
-  const savedSearch = sessionStorage.getItem('shopSearch');
-  const savedCategory = sessionStorage.getItem('shopCategory');
-  const savedSort = sessionStorage.getItem('shopSort');
-  const savedGender = sessionStorage.getItem('shopGender');
-  const savedPrice = sessionStorage.getItem('shopPrice');
-  if (savedSearch) this.searchText = savedSearch;
-  if (savedCategory) this.selectedCategory = savedCategory;
-  if (savedSort) this.selectedSortBy = savedSort;
-  if (savedGender) this.selectedGender = savedGender;
-  if (savedPrice) this.selectedPrice = savedPrice;
-  this.loadPage();
+    // Restaurar estado de filtros/búsqueda
+    const savedSearch = sessionStorage.getItem('shopSearch');
+    const savedCategory = sessionStorage.getItem('shopCategory');
+    const savedSort = sessionStorage.getItem('shopSort');
+    const savedGender = sessionStorage.getItem('shopGender');
+    const savedPrice = sessionStorage.getItem('shopPrice');
+    if (savedSearch) this.searchText = savedSearch;
+    if (savedCategory) this.selectedCategory = savedCategory;
+    if (savedSort) this.selectedSortBy = savedSort;
+    if (savedGender) this.selectedGender = savedGender;
+    if (savedPrice) this.selectedPrice = savedPrice;
+    this.loadPage();
   }
 
-  private loadPage(){
+  private loadPage() {
     if (!this.hasMore || this.loading) return;
     this.loading = true;
-    this.api.getProductsPage(this.page, this.pageSize).subscribe(res => {
+    this.api.getProductsPage(this.page, this.pageSize).subscribe((res) => {
       this.allProducts = [...this.allProducts, ...res.items];
       this.filteredCards = [...this.allProducts];
       this.hasMore = res.hasMore;
       this.loading = false;
       this.page++;
-      // Restaurar scroll tras primera carga si existe estado previo
-      const pendingScroll = sessionStorage.getItem('shopScrollY');
-      if (pendingScroll && this.page === 2) {
-        setTimeout(() => {
-          window.scrollTo({ top: +pendingScroll });
-          sessionStorage.removeItem('shopScrollY');
-        }, 0);
-      }
     });
   }
   filterCards() {
     const text = this.searchText.toLowerCase();
-    this.filteredCards = this.allProducts.filter((card) =>
-      card.product_name.toLowerCase().includes(text) ||
-      card.categories.join(' ').toLowerCase().includes(text)
+    this.filteredCards = this.allProducts.filter(
+      (card) =>
+        card.product_name.toLowerCase().includes(text) ||
+        card.categories.join(' ').toLowerCase().includes(text)
     );
-  sessionStorage.setItem('shopSearch', this.searchText);
-  // No se recarga página; se filtra sobre las ya cargadas
+    sessionStorage.setItem('shopSearch', this.searchText);
+    // No se recarga página; se filtra sobre las ya cargadas
   }
   getCategory(key: string): void {
     this.selectedCategory = key;
-  if (key === 'all') { this.filteredCards = [...this.allProducts]; }
-  else { this.filteredCards = this.allProducts.filter((card) => card.categories.some((cat) => cat.toLowerCase() === key.toLowerCase())); }
-  sessionStorage.setItem('shopCategory', this.selectedCategory);
+    if (key === 'all') {
+      this.filteredCards = [...this.allProducts];
+    } else {
+      this.filteredCards = this.allProducts.filter((card) =>
+        card.categories.some((cat) => cat.toLowerCase() === key.toLowerCase())
+      );
+    }
+    sessionStorage.setItem('shopCategory', this.selectedCategory);
   }
   getSorted(key: string): void {
     this.selectedSortBy = key;
     switch (key) {
       case 'newest':
-  this.filteredCards = [...this.allProducts].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        this.filteredCards = [...this.allProducts].sort(
+          (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+        );
         break;
       case 'price_high_low':
-  this.filteredCards = [...this.allProducts].sort((a, b) => +b.base_price - +a.base_price);
+        this.filteredCards = [...this.allProducts].sort(
+          (a, b) => +b.base_price - +a.base_price
+        );
         break;
       case 'price_low_high':
-  this.filteredCards = [...this.allProducts].sort((a, b) => +a.base_price - +b.base_price);
+        this.filteredCards = [...this.allProducts].sort(
+          (a, b) => +a.base_price - +b.base_price
+        );
         break;
       case 'discounted':
-  this.filteredCards = [...this.allProducts].sort((a, b) => { const discountA = +a.dealPrice - +a.base_price; const discountB = +b.dealPrice - +b.base_price; return discountB - discountA; });
+        this.filteredCards = [...this.allProducts].sort((a, b) => {
+          const discountA = +a.dealPrice - +a.base_price;
+          const discountB = +b.dealPrice - +b.base_price;
+          return discountB - discountA;
+        });
         break;
       default:
-  this.filteredCards = [...this.allProducts];
+        this.filteredCards = [...this.allProducts];
     }
-  sessionStorage.setItem('shopSort', this.selectedSortBy);
+    sessionStorage.setItem('shopSort', this.selectedSortBy);
   }
   getGender(gender: string): void {
-  if (gender.toLowerCase() === 'all') { this.filteredCards = [...this.allProducts]; }
-  else { this.filteredCards = this.allProducts.filter((card) => card.gender === gender.toLowerCase()); }
-  this.selectedGender = gender;
-  sessionStorage.setItem('shopGender', this.selectedGender);
+    if (gender.toLowerCase() === 'all') {
+      this.filteredCards = [...this.allProducts];
+    } else {
+      this.filteredCards = this.allProducts.filter(
+        (card) => card.gender === gender.toLowerCase()
+      );
+    }
+    this.selectedGender = gender;
+    sessionStorage.setItem('shopGender', this.selectedGender);
   }
   getPricing(base_priceRange: string): void {
     this.selectedPrice = base_priceRange;
     switch (base_priceRange) {
       case '0-50':
-  this.filteredCards = this.allProducts.filter((card) => +card.base_price >= 0 && +card.base_price <= 50);
+        this.filteredCards = this.allProducts.filter(
+          (card) => +card.base_price >= 0 && +card.base_price <= 50
+        );
         break;
       case '50-100':
-  this.filteredCards = this.allProducts.filter((card) => +card.base_price > 50 && +card.base_price <= 100);
+        this.filteredCards = this.allProducts.filter(
+          (card) => +card.base_price > 50 && +card.base_price <= 100
+        );
         break;
       case '100-200':
-  this.filteredCards = this.allProducts.filter((card) => +card.base_price > 100 && +card.base_price <= 200);
+        this.filteredCards = this.allProducts.filter(
+          (card) => +card.base_price > 100 && +card.base_price <= 200
+        );
         break;
       case 'over-200':
-  this.filteredCards = this.allProducts.filter((card) => +card.base_price > 200);
+        this.filteredCards = this.allProducts.filter(
+          (card) => +card.base_price > 200
+        );
         break;
       case 'all':
       default:
-  this.filteredCards = [...this.allProducts];
+        this.filteredCards = [...this.allProducts];
         break;
     }
-  sessionStorage.setItem('shopPrice', this.selectedPrice);
+    sessionStorage.setItem('shopPrice', this.selectedPrice);
   }
   getRestFilter() {
     this.selectedCategory = this.folders[0].key;
     this.selectedSortBy = this.notes[0].key;
-  this.filteredCards = [...this.allProducts];
-  this.searchText='';
-  this.selectedGender='all';
-  this.selectedPrice='all';
-  sessionStorage.removeItem('shopSearch');
-  sessionStorage.removeItem('shopCategory');
-  sessionStorage.removeItem('shopSort');
-  sessionStorage.removeItem('shopGender');
-  sessionStorage.removeItem('shopPrice');
+    this.filteredCards = [...this.allProducts];
+    this.searchText = '';
+    this.selectedGender = 'all';
+    this.selectedPrice = 'all';
+    sessionStorage.removeItem('shopSearch');
+    sessionStorage.removeItem('shopCategory');
+    sessionStorage.removeItem('shopSort');
+    sessionStorage.removeItem('shopGender');
+    sessionStorage.removeItem('shopPrice');
   }
-  getProductList() { this.searchText = ''; this.filteredCards = [...this.allProducts]; }
-  isOver(): boolean { return this.mediaMatcher.matches; }
-  closeFilters(sidenav: any) { if (this.isOver()) { sidenav.close(); } }
+  getProductList() {
+    this.searchText = '';
+    this.filteredCards = [...this.allProducts];
+  }
+  closeFilters(sidenav: any) {
+    sidenav.close();
+  }
   // Adjusted base path from 'apps/product' to 'product'
   // Lógica de eliminación removida para vista de clientes.
   getviewDetails(productcardDetails: ProductListItem) {
-    // Guardar posición de scroll antes de navegar al detalle
-    sessionStorage.setItem('shopScrollY', window.scrollY.toString());
-    this.router.navigate(['product', productcardDetails.id]);
+    this.dialog.open(ProductDetailsComponent, {
+      data: { productId: productcardDetails.id },
+      panelClass: ['product-details-dialog'],
+      maxWidth: '100vw',
+      width: '100vw',
+      height: '100vh',
+      autoFocus: false,
+      restoreFocus: false,
+      disableClose: false,
+    });
   }
-  toggleColor(color: string): void { this.selectedColor = this.selectedColor === color ? null : color; }
-  getStarClass(index: number, rating?: number): string { const safeRating = rating ?? 0; const fullStars = Math.floor(safeRating); const partialStars = safeRating % 1 !== 0; if (index < fullStars) { return 'fill-warning'; } else if (index === fullStars && partialStars) { return 'text-warning'; } else { return ''; } }
+  toggleColor(color: string): void {
+    this.selectedColor = this.selectedColor === color ? null : color;
+  }
+  getStarClass(index: number, rating?: number): string {
+    const safeRating = rating ?? 0;
+    const fullStars = Math.floor(safeRating);
+    const partialStars = safeRating % 1 !== 0;
+    if (index < fullStars) {
+      return 'fill-warning';
+    } else if (index === fullStars && partialStars) {
+      return 'text-warning';
+    } else {
+      return '';
+    }
+  }
 
   // Inicializar observer para infinite scroll (llamar en AfterViewInit si fuera necesario)
-  setupInfiniteScroll(anchor: HTMLElement){
+  setupInfiniteScroll(anchor: HTMLElement) {
     if (this.intersectionObserver) this.intersectionObserver.disconnect();
-    this.intersectionObserver = new IntersectionObserver(entries => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) { this.loadPage(); }
-      });
-    }, { root: null, rootMargin: '0px', threshold: 0.1 });
+    this.intersectionObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            this.loadPage();
+          }
+        });
+      },
+      { root: null, rootMargin: '0px', threshold: 0.1 }
+    );
     this.intersectionObserver.observe(anchor);
   }
 
@@ -216,7 +283,7 @@ export class ShopComponent implements OnInit, AfterViewInit {
 
   // Salvamos la posición si el usuario refresca la página
   @HostListener('window:beforeunload')
-  saveScrollPosition(){
-    sessionStorage.setItem('shopScrollY', window.scrollY.toString());
+  saveScrollPosition() {
+    // lógica eliminada
   }
 }

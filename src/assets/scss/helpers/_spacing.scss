@@ -142,4 +142,9 @@ $rtl:(
     class: p-r,
     values: variables.$spacers
   ),
-)
+ );
+
+// Responsive utility: zero padding only on small screens (<576px)
+@media (max-width: 575.98px) {
+  .p-sm-0 { padding: 0 !important; }
+}
