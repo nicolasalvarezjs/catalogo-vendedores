@@ -14,6 +14,14 @@ export interface ProductListItem {
   categories: string[];
   gender?: string;
   date: string;
+  // Wholesale extended fields (optional in list)
+  titulo?: string;
+  talles?: string;
+  precio?: string;
+  tela?: string;
+  generos?: string[];
+  categoria?: string;
+  images?: string[];
 }
 
 export interface ProductDetail extends Element {
@@ -39,7 +47,14 @@ export class MockProductApiService {
       rating: p.rating,
       categories: p.categories,
       gender: p.gender,
-      date: p.date
+  date: p.date,
+  titulo: p.titulo,
+  talles: p.talles,
+  precio: p.precio,
+  tela: p.tela,
+  generos: p.generos,
+  categoria: p.categoria,
+  images: p.images
     }));
     return of(slim).pipe(delay(this.artificialDelay));
   }
@@ -78,7 +93,14 @@ export class MockProductApiService {
       rating: p.rating,
       categories: p.categories,
       gender: p.gender,
-      date: p.date
+  date: p.date,
+  titulo: p.titulo,
+  talles: p.talles,
+  precio: p.precio,
+  tela: p.tela,
+  generos: p.generos,
+  categoria: p.categoria,
+  images: p.images
     }));
     const hasMore = end < total;
     const payload = { items: slice, total, page, pageSize, hasMore };

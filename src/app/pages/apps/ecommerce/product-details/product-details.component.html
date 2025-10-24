@@ -2,7 +2,7 @@
   <button mat-icon-button class="bg-primary text-white" (click)="getBack()" aria-label="Volver">
     <mat-icon>arrow_back</mat-icon>
   </button>
-  <h6 class="m-0 f-s-16 f-w-600 text-ellipsis" *ngIf="product?.product_name; else loadingTitle">{{ product?.product_name }}</h6>
+  <!-- Título pequeño removido: usaremos solo el título grande dentro de la tarjeta -->
   <ng-template #loadingTitle><span class="f-s-14 text-muted">Cargando...</span></ng-template>
 </div>
 <div class="details-wrapper p-16 p-sm-0 m-t-navbar-details">
@@ -38,12 +38,36 @@
 }
 <mat-card class="cardWithShadow b-1 rounded p-30 details-card">
   <div class="row">
+    <div class="col-lg-1 m-r-20 thumbs-column" role="tablist" aria-label="Galería de imágenes del producto" *ngIf="slides.length > 0">
+      @for(slide of slides; let i = $index; track slide.id){
+      <button
+        type="button"
+        class="thumb-btn p-0"
+        (click)="goToSlide(i)"
+        [attr.aria-label]="'Imagen ' + (i+1)"
+        role="tab"
+        [attr.aria-selected]="i === activeIndex"
+        [attr.data-index]="i"
+        [attr.data-active]="i === activeIndex ? 'true' : null"
+      >
+        <div class="thumb-wrapper" [class.active]="i === activeIndex">
+          <img
+            [src]="slide.imgUrl"
+            [alt]="slide.altText"
+            class="thumb-img"
+            [attr.data-index]="i"
+            [attr.data-active]="i === activeIndex ? 'true' : null"
+          />
+        </div>
+      </button>
+      }
+    </div>
     <div class="col-lg-6">
   @if(slides.length > 0){
       <owl-carousel-o [options]="customOptions" class="product-carousel">
         @for(slide of slides; track slide.id){
         <ng-template carouselSlide [id]="slide.id">
-          <img [src]="slide.imgUrl" [alt]="slide.altText" class="rounded w-100" />
+          <img [src]="slide.imgUrl" [alt]="slide.altText" class="rounded w-100" [class.active]="activeIndex === +slide.id" [attr.data-index]="slide.id" [attr.data-active]="activeIndex === +slide.id ? 'true' : null" />
         </ng-template>
         }
       </owl-carousel-o>
@@ -51,20 +75,26 @@
         <img [src]="product?.imagePath" alt="producto" class="rounded w-100" />
       }
     </div>
-    <div class="col-lg-6">
+    <div class="col-lg-4">
     <!-- Chips de estado y categoría removidos temporalmente -->
   <h3 class="m-t-10 f-w-600">{{ product?.product_name }}</h3>
   @if(vendor){<div class="f-s-14 m-t-4">Vendedor: <span class="f-w-600">{{ vendor.name }}</span></div>}
   <p class="m-t-1 f-s-14 f-w-500">{{ product?.description || 'Descripción no disponible.' }}</p>
+  <div class="f-s-14 m-t-8 wholesale-extra">
+  @if(product?.talles){<div class="line"><strong>Talles:</strong> {{ product?.talles }}</div>}
+  @if(product?.tela){<div class="line"><strong>Tela:</strong> {{ product?.tela }}</div>}
+  @if(product?.generos?.length){<div class="line"><strong>Géneros:</strong> {{ product?.generos?.join(', ') }}</div>}
+  @if(product?.categoria){<div class="line"><strong>Categoría:</strong> {{ product?.categoria }}</div>}
+  </div>
       <ng-container *ngIf="product as p">
         <div class="d-flex align-items-center price-block m-t-4">
           <ng-container *ngIf="p.dealPrice !== undefined && p.base_price !== undefined && p.dealPrice < p.base_price; else baseOnly">
-            <span class="price-old f-s-16 f-w-600 m-r-8" aria-label="Precio anterior">${{ p.base_price }}</span>
-            <span class="f-s-20 f-w-600 text-primary" aria-label="Precio con descuento">${{ p.dealPrice }}</span>
+            <span class="price-old f-s-16 f-w-600 m-r-8" aria-label="Precio anterior">{{ p.base_price | monedaARS }}</span>
+            <span class="f-s-20 f-w-600 text-primary" aria-label="Precio con descuento">{{ p.dealPrice | monedaARS }}</span>
             <span class="f-s-14 f-w-600 m-l-8 text-success">({{ p.discountPercent || (((p.base_price - p.dealPrice) / p.base_price) * 100) | number:'1.0-0' }}% OFF)</span>
           </ng-container>
           <ng-template #baseOnly>
-            <span class="f-s-20 f-w-600">${{ p?.base_price }}</span>
+            <span class="f-s-20 f-w-600">{{ p?.base_price | monedaARS }}</span>
           </ng-template>
         </div>
       </ng-container>
@@ -200,10 +230,10 @@
           <div class="d-flex align-items-center justify-content-between">
             <div class="d-flex align-items-center price-line">
               @if(productcard.dealPrice && productcard.dealPrice < productcard.base_price){
-                <span class="price-old f-s-14 f-w-500 m-r-6" aria-label="Precio anterior">${{ productcard.base_price }}</span>
-                <h6 class="f-s-16 f-w-600 m-0 text-primary" aria-label="Precio con descuento">${{ productcard.dealPrice }}</h6>
+                <span class="price-old f-s-14 f-w-500 m-r-6" aria-label="Precio anterior">{{ productcard.base_price | monedaARS }}</span>
+                <h6 class="f-s-16 f-w-600 m-0 text-primary" aria-label="Precio con descuento">{{ productcard.dealPrice | monedaARS }}</h6>
               } @else {
-                <h6 class="f-s-16 f-w-600 m-0" aria-label="Precio">${{ productcard.base_price }}</h6>
+                <h6 class="f-s-16 f-w-600 m-0" aria-label="Precio">{{ productcard.base_price | monedaARS }}</h6>
               }
             </div>
             <div class="m-l-auto d-flex gap-4">

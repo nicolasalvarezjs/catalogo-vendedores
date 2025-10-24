@@ -15,9 +15,9 @@
         <div class="p-16">
           <mat-nav-list>
             @for(folder of folders; track folder){
-            <mat-list-item role="listitem" class="m-b-2 gap-10 active-primary" [ngClass]="{'bg-primary': selectedCategory === folder.key}" (click)="getCategory(folder.key)">
+            <mat-list-item role="listitem" class="m-b-2 gap-10 active-primary" [ngClass]="{'bg-primary': selectedCategory === folder.name}" (click)="getCategory(folder.name)">
               <span matListItemIcon class="m-r-0"><i-tabler name="{{ folder.icon }}" class="icon-18"></i-tabler></span>
-              <span matListItemTitle class="f-w-400 f-s-14">{{ folder.label }}</span>
+              <span matListItemTitle class="f-w-400 f-s-14">{{ folder.name | titlecase }}</span>
             </mat-list-item>
             }
           </mat-nav-list>
@@ -26,9 +26,9 @@
         <div class="p-16">
           <mat-nav-list>
             @for (note of notes; track note) {
-            <mat-list-item role="listitem" class="m-b-2 gap-10 active-primary" [ngClass]="{ 'bg-primary': selectedSortBy === note.key }" (click)="getSorted(note.key)">
+            <mat-list-item role="listitem" class="m-b-2 gap-10 active-primary" [ngClass]="{ 'bg-primary': selectedSortBy === note.name }" (click)="getSorted(note.name)">
               <span matListItemIcon class="m-r-0"><i-tabler name="{{ note.icon }}" class="icon-18"></i-tabler></span>
-              <span matListItemTitle class="f-w-400 f-s-14">{{ note.label }}</span>
+              <span matListItemTitle class="f-w-400 f-s-14">{{ note.name | titlecase }}</span>
             </mat-list-item>
             }
           </mat-nav-list>
@@ -103,10 +103,10 @@
               <div class="product-meta-line d-flex align-items-center justify-content-between">
                 <div class="price-line d-flex align-items-center">
                   @if(productcard.dealPrice && productcard.dealPrice < productcard.base_price){
-                    <span class="price-old f-s-14 f-w-500 m-r-6" aria-label="Precio anterior">${{ productcard.base_price }}</span>
-                    <h6 class="price-current f-s-16 f-w-600 m-0 text-primary" aria-label="Precio con descuento">${{ productcard.dealPrice }}</h6>
+                    <span class="price-old f-s-14 f-w-500 m-r-6" aria-label="Precio anterior">{{ productcard.base_price | monedaARS }}</span>
+                    <h6 class="price-current f-s-16 f-w-600 m-0 text-primary" aria-label="Precio con descuento">{{ productcard.dealPrice | monedaARS }}</h6>
                   } @else {
-                    <h6 class="price-current f-s-16 f-w-600 m-0" aria-label="Precio">${{ productcard.base_price }}</h6>
+                    <h6 class="price-current f-s-16 f-w-600 m-0" aria-label="Precio">{{ productcard.base_price | monedaARS }}</h6>
                   }
                 </div>
                 <div class="stars-line d-flex align-items-center gap-1">
@@ -114,6 +114,13 @@
                     @for (star of [1,2,3,4,5]; track star){<i-tabler name="star" class="icon-17 text-warning" [ngClass]="getStarClass(star, productcard.rating )"></i-tabler>}
                   }
                 </div>
+              </div>
+              <div class="wholesale-lines f-s-12 m-t-8">
+                <!-- Línea de título removida para evitar duplicación -->
+                @if(productcard.talles){<div class="line"><strong>Talles:</strong> {{ productcard.talles }}</div>}
+                @if(productcard.tela){<div class="line"><strong>Tela:</strong> {{ productcard.tela }}</div>}
+                @if(productcard.generos && productcard.generos.length){<div class="line"><strong>Género:</strong> {{ productcard.generos.join(', ') }}</div>}
+                @if(productcard.categoria){<div class="line"><strong>Categoría:</strong> {{ productcard.categoria }}</div>}
               </div>
             </mat-card-content>
           </mat-card>

@@ -8,7 +8,8 @@ import {
   Optional,
 } from '@angular/core';
 import { MaterialModule } from 'src/app/material.module';
-import { CarouselModule, OwlOptions } from 'ngx-owl-carousel-o';
+import { MonedaArsPipe } from 'src/app/pipe/moneda-ars.pipe';
+import { CarouselModule, OwlOptions, CarouselComponent } from 'ngx-owl-carousel-o';
 import { IconModule } from 'src/app/icon/icon.module';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -35,14 +36,13 @@ interface Slide {
 
 @Component({
   selector: 'app-product-details',
-  imports: [MaterialModule, CarouselModule, IconModule, CommonModule],
+  imports: [MaterialModule, CarouselModule, IconModule, CommonModule, MonedaArsPipe],
   templateUrl: './product-details.component.html',
   styleUrl: './product-details.component.scss',
 })
 export class ProductDetailsComponent implements AfterViewInit {
-  @ViewChild('carouselContainer', { static: false })
+  @ViewChild(CarouselComponent) carousel?: CarouselComponent;
   private productService = inject(ProductService);
-  carouselContainer!: ElementRef;
   product: ProductDetail | null = null;
   loading: boolean = true; // spinner inicial
   isSelected = false;
@@ -50,49 +50,20 @@ export class ProductDetailsComponent implements AfterViewInit {
   toggleValue: any = null;
   selectedTabIndex = 0;
   customOptions: OwlOptions = {
-    loop: true,
+    loop: false,
     mouseDrag: true,
     touchDrag: true,
     pullDrag: true,
     dots: false,
     navSpeed: 500,
-    navText: ['‹', '›'],
     items: 1,
     autoHeight: true,
-    responsive: {
-      0: { items: 1 },
-      400: { items: 1 },
-      740: { items: 1 },
-      940: { items: 1 },
-    },
-    nav: true,
+    responsive: { 0: { items: 1 }, 400: { items: 1 }, 740: { items: 1 }, 940: { items: 1 } },
+    nav: false,
   };
-  slides: Slide[] = [
-    {
-      id: 'slide-1',
-      imgUrl: 'assets/images/products/s1.jpg',
-      altText: 'Imagen 1',
-      title: 'Vista 1',
-    },
-    {
-      id: 'slide-2',
-      imgUrl: 'assets/images/products/s2.jpg',
-      altText: 'Imagen 2',
-      title: 'Vista 2',
-    },
-    {
-      id: 'slide-3',
-      imgUrl: 'assets/images/products/s3.jpg',
-      altText: 'Imagen 3',
-      title: 'Vista 3',
-    },
-    {
-      id: 'slide-4',
-      imgUrl: 'assets/images/products/s4.jpg',
-      altText: 'Imagen 4',
-      title: 'Vista 4',
-    },
-  ];
+  // Slides dinámicos construidos desde product.images (solo ropa 1-4.jpg)
+  slides: Slide[] = [];
+  activeIndex = 0;
   productcards = productcards; // se usará ahora como productos del vendedor
   vendor: Vendor | undefined;
   vendorProducts: Element[] = [];
@@ -135,7 +106,12 @@ export class ProductDetailsComponent implements AfterViewInit {
       }
     }
   }
-  ngAfterViewInit(): void {}
+  ngAfterViewInit(): void {
+    if (this.carousel && this.slides.length) {
+      this.carousel.to('0');
+      this.activeIndex = 0;
+    }
+  }
   trackById(index: number, item: any): string {
     return item.id;
   }
@@ -190,8 +166,54 @@ export class ProductDetailsComponent implements AfterViewInit {
       if (detail) {
         this.vendor = detail.vendor;
         this.vendorProducts = detail.vendorProducts || [];
+        this.buildSlides(detail);
       }
       this.loading = false;
     });
+  }
+
+  private buildSlides(detail: ProductDetail) {
+    const allowedClothing = [
+      'assets/images/products/1.jpg',
+      'assets/images/products/2.jpg',
+      'assets/images/products/3.jpg',
+      'assets/images/products/4.jpg',
+    ];
+    const images: string[] = Array.isArray((detail as any).images)
+      ? (detail as any).images
+      : [];
+    // Detecta si es prenda (fashion) o si alguno de los géneros apunta a ropa
+    const isClothing =
+      (detail as any).categoria === 'fashion' ||
+      ((detail as any).generos || []).some((g: string) => ['Mujer', 'Hombre', 'Niño'].includes(g));
+
+    let selected: string[] = [];
+    if (isClothing) {
+      // filtra solo imágenes permitidas y limita a 4
+      selected = images.filter((img) => allowedClothing.includes(img));
+      if (selected.length === 0) {
+        // fallback: usa todas las clothing si el producto aún no tiene asignadas
+        selected = allowedClothing.slice(0, 4);
+      }
+    } else if (images.length > 0) {
+      // No es ropa, usa sus propias imágenes
+      selected = images.slice(0, 4);
+    } else if (detail.imagePath) {
+      selected = [detail.imagePath];
+    }
+    this.slides = selected.slice(0,5).map((url, idx) => ({
+      id: String(idx),
+      imgUrl: url,
+      altText: detail.product_name || `Imagen ${idx + 1}`,
+    }));
+    this.activeIndex = 0;
+  }
+
+  goToSlide(i: number) {
+    if (i < 0 || i >= this.slides.length) return;
+    this.activeIndex = i;
+    if (this.carousel) {
+      this.carousel.to(String(i));
+    }
   }
 }
