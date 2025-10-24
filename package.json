@@ -3,10 +3,9 @@
   "version": "5.0.0",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve --port 8080",
+    "start": "ng serve --host 0.0.0.0 --port $PORT",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "start:prod": "node index.js",
     "test": "ng test"
   },
   "private": true,
