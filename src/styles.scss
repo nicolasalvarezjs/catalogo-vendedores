@@ -70,3 +70,10 @@ body {
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
 }
+
+// Reducir padding de mat-card-content en mobile
+@media (max-width: 767px) {
+    .mat-card-content {
+        padding: 10px !important;
+    }
+}

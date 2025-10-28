@@ -138,7 +138,7 @@ interface VendorProductsDialogData {
                     <div class="img-wrapper position-relative">
                       <img [src]="productcard.imagePath" alt="imgSrc" class="w-100" mat-card-image />
                     </div>
-                    <mat-card-content class="p-b-24 p-t-12 position-relative">
+                    <mat-card-content class="p-10 position-relative" style="padding: 10px !important;"> 
                       <mat-card-title class="mat-headline-2 f-s-16 m-b-4 product-title text-ellipsis">{{ productcard.product_name }}</mat-card-title>
                       <div class="product-meta-line d-flex align-items-center justify-content-between">
                         <div class="price-line d-flex align-items-center">
@@ -188,6 +188,7 @@ interface VendorProductsDialogData {
       max-width: 100vw !important;
       margin: 0 !important;
       padding: 0 !important;
+      overflow-x: hidden;
     }
     .modal-header {
       display: flex;
@@ -226,6 +227,7 @@ interface VendorProductsDialogData {
       width: 100% !important;
       padding: 16px;
       overflow-y: auto;
+      overflow-x: hidden;
       box-sizing: border-box;
     }
     .search-field {
@@ -284,8 +286,18 @@ interface VendorProductsDialogData {
     .active-primary.bg-primary .mdc-list-item__primary-text {
       color: white;
     }
-    .productcard {
-      margin-bottom: 0 !important;
+    .row {
+      margin-left: 0 !important;
+      margin-right: 0 !important;
+      padding-left: 2px;
+      padding-right: 2px;
+    }
+    .col-6 {
+      padding-left: 4px !important;
+      padding-right: 4px !important;
+    }
+    mat-card-content {
+      padding: 10px !important;
     }
     .shop-skeleton-wrapper .skeleton-card {
       position: relative;
