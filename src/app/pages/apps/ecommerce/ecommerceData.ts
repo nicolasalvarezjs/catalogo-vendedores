@@ -3,6 +3,10 @@ export interface Vendor {
   name: string; // nombre visible
   logoPath?: string; // opcional: logo del vendedor
   rating?: number; // rating agregado del vendedor
+  description?: string; // descripción del vendedor
+  categories?: string[]; // categorías que vende
+  address?: string; // dirección
+  salesType?: 'mayor' | 'menor' | 'ambos'; // tipo de venta
   socials?: {
     whatsapp?: string; // número en formato internacional sin '+' ej: 5491122334455
     web?: string; // URL del sitio
@@ -47,7 +51,12 @@ export const VENDORS: Vendor[] = [
   {
     id: 'v-alfa',
     name: 'Alfa Distribuciones',
+    logoPath: 'assets/images/products/vendedor1.jpg',
     rating: 4.6,
+    description: 'Distribuidora especializada en productos textiles y de hogar. Ofrecemos calidad y precios competitivos.',
+    categories: ['Ropa', 'Hogar', 'Textiles', 'Juguetes'],
+    address: 'Av. Corrientes 1234, CABA',
+    salesType: 'ambos',
     socials: {
       whatsapp: '5491160012233',
       web: 'https://alfa.example.com',
@@ -57,7 +66,12 @@ export const VENDORS: Vendor[] = [
   {
     id: 'v-bravo',
     name: 'Bravo Retail',
+    logoPath: 'assets/images/products/vendedor2.jpeg',
     rating: 4.3,
+    description: 'Tienda especializada en electrónica y accesorios tecnológicos. Los mejores productos al mejor precio.',
+    categories: ['Electrónica', 'Accesorios', 'Tecnología'],
+    address: 'Florida 567, CABA',
+    salesType: 'menor',
     socials: {
       web: 'https://bravo.example.com',
     },
@@ -65,7 +79,12 @@ export const VENDORS: Vendor[] = [
   {
     id: 'v-charlie',
     name: 'Charlie Imports',
+    logoPath: 'assets/images/products/vendedor3.jpeg',
     rating: 4.8,
+    description: 'Importadora directa de productos internacionales. Especialistas en libros y artículos culturales.',
+    categories: ['Libros', 'Importados', 'Cultural', 'Educativos'],
+    address: 'Santa Fe 890, CABA',
+    salesType: 'mayor',
     socials: {
       whatsapp: '5491155599911',
       facebook: 'https://facebook.com/charlieimports',
@@ -93,8 +112,7 @@ const MULTIPLIED_TIMES = 10; // factor de multiplicación
 export const PRODUCT_DATA: Element[] = Array.from({ length: MULTIPLIED_TIMES }, (_, i) =>
   BASE_PRODUCTS.map(p => ({
     ...p,
-    id: p.id + i * BASE_PRODUCTS.length,
-    product_name: `${p.product_name} #${i + 1}`
+    id: p.id + i * BASE_PRODUCTS.length
   }))
 ).flat();
 

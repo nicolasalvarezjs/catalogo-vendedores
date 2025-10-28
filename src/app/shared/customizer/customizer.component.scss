@@ -1,0 +1,106 @@
+.customizerNav {
+  background: var(--mat-sys-surface, #fff);
+  height: 100vh;
+  width: 100%;
+  position: relative;
+}
+
+.customizer-button-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  &.gap-16 {
+    gap: 16px;
+  }
+
+  mat-button-toggle {
+    justify-content: flex-start;
+    border-radius: 8px;
+    border: 1px solid var(--mat-sys-outline-variant);
+    background: var(--mat-sys-surface-container-lowest);
+
+    &.mat-button-toggle-checked {
+      background: var(--mat-sys-primary);
+      color: var(--mat-sys-on-primary);
+      border-color: var(--mat-sys-primary);
+    }
+
+    &:hover:not(.mat-button-toggle-checked) {
+      background: var(--mat-sys-surface-container-highest);
+    }
+  }
+}
+
+.theme-colors {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+
+  &.two-row {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  mat-button-toggle {
+    padding: 8px;
+    border-radius: 50%;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid transparent;
+
+    &.mat-button-toggle-checked {
+      border-color: var(--mat-sys-primary);
+    }
+
+    .theme-circle {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+
+      &.orange_theme {
+        background: linear-gradient(135deg, #ff6b35, #f7931e);
+      }
+
+      &.blue_theme {
+        background: linear-gradient(135deg, #1e88e5, #1565c0);
+      }
+
+      &.aqua_theme {
+        background: linear-gradient(135deg, #00bcd4, #0097a7);
+      }
+
+      &.purple_theme {
+        background: linear-gradient(135deg, #9c27b0, #7b1fa2);
+      }
+
+      &.green_theme {
+        background: linear-gradient(135deg, #4caf50, #388e3c);
+      }
+
+      &.pink_theme {
+        background: linear-gradient(135deg, #C7346F, #ad1457);
+      }
+
+      .theme-icon {
+        color: white;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+      }
+    }
+
+    &.mat-button-toggle-checked .theme-circle .theme-icon {
+      opacity: 1;
+    }
+  }
+}
+
+.fill-icon {
+  fill: currentColor;
+}

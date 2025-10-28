@@ -1,145 +1,157 @@
 <mat-card class="cardWithShadow overflow-hidden position-relative">
   <mat-sidenav-container class="email-box">
-  <mat-sidenav #mailnav mode="over" class="mail-sidebar" [style.width.px]="mobileSidenavWidth">
-      <div class="mobile-filters-header d-flex align-items-center justify-content-between">
-        <h6 class="m-0 f-s-14 f-w-600">Filtros</h6>
-        <button mat-icon-button (click)="mailnav.close()" aria-label="Cerrar filtros">
-          <mat-icon>close</mat-icon>
-        </button>
-      </div>
-  <ng-scrollbar class="position-relative mobile-filters-scroll" style="height: 100%">
-        <div class="p-16">
-          <!-- Add New Product button removed -->
-        </div>
-  <h5 class="m-0 p-t-16 p-x-32 f-s-14 f-w-600">Filtrar por categoría</h5>
-        <div class="p-16">
-          <mat-nav-list>
-            @for(folder of folders; track folder){
-            <mat-list-item role="listitem" class="m-b-2 gap-10 active-primary" [ngClass]="{'bg-primary': selectedCategory === folder.name}" (click)="getCategory(folder.name)">
-              <span matListItemIcon class="m-r-0"><i-tabler name="{{ folder.icon }}" class="icon-18"></i-tabler></span>
-              <span matListItemTitle class="f-w-400 f-s-14">{{ folder.name | titlecase }}</span>
-            </mat-list-item>
-            }
-          </mat-nav-list>
-        </div>
-  <h5 class="m-0 p-t-16 p-x-32 f-s-14 f-w-600 b-t-1">Ordenar por</h5>
-        <div class="p-16">
-          <mat-nav-list>
-            @for (note of notes; track note) {
-            <mat-list-item role="listitem" class="m-b-2 gap-10 active-primary" [ngClass]="{ 'bg-primary': selectedSortBy === note.name }" (click)="getSorted(note.name)">
-              <span matListItemIcon class="m-r-0"><i-tabler name="{{ note.icon }}" class="icon-18"></i-tabler></span>
-              <span matListItemTitle class="f-w-400 f-s-14">{{ note.name | titlecase }}</span>
-            </mat-list-item>
-            }
-          </mat-nav-list>
-        </div>
-  <h5 class="m-0 p-t-16 p-x-32 f-s-14 f-w-600 b-t-1">Por género</h5>
-        <div class="p-16 pricing-section">
-          <mat-radio-group [(ngModel)]="selectedGender" class="m-b-20">
-            @for (price of genderOptions; track price.value) {
-            <mat-radio-button class="custom-radio" [value]="price.value" (click)="getGender(price.value)">{{ price.label | titlecase }}</mat-radio-button>
-            }
-          </mat-radio-group>
-        </div>
-  <h5 class="m-0 p-t-16 p-x-32 f-s-14 f-w-600 b-t-1">Por precio</h5>
-        <div class="p-16 pricing-section">
-          <mat-radio-group [(ngModel)]="selectedPrice" class="m-b-20">
-            @for (price of priceOptions; track price.value) {
-            <mat-radio-button class="custom-radio" [value]="price.value" (click)="getPricing(price.value)">{{ price.label | titlecase }}</mat-radio-button>
-            }
-          </mat-radio-group>
-        </div>
-        <div class="sidebar-reset-wrapper b-t-1 p-16">
-          <button mat-flat-button class="w-100" (click)="getRestFilter()">Restablecer filtros</button>
-        </div>
-      </ng-scrollbar>
+    <mat-sidenav #customizerSidenav mode="over" position="end" class="customizer-sidenav">
+      <app-customizer (closeCustomizer)="customizerSidenav.close()"></app-customizer>
     </mat-sidenav>
     <mat-sidenav-content>
-  <div class="content-wrapper p-sm-0">
-  <div class="shop-navbar-fixed d-flex align-items-center gap-16 p-y-12 p-x-16 p-sm-12 b-1 bg-white">
-          <button mat-icon-button class="bg-primary text-white" (click)="mailnav.toggle()" aria-label="Abrir filtros">
-            <mat-icon>menu</mat-icon>
-          </button>
-          <h6 class="m-0 f-s-18 f-w-600 d-none d-md-block">Productos</h6>
-          <div class="flex-grow-1 d-flex justify-content-end">
+      <!-- Customizer Overlay -->
+      <div class="customizer-overlay" [class.visible]="customizerSidenav.opened" (click)="customizerSidenav.close()"></div>
+      <div class="content-wrapper p-sm-0">
+        <div class="shop-navbar-fixed d-flex align-items-center gap-16 p-y-12 p-x-16 p-sm-12 b-1 bg-white">
+          <!-- Logo section -->
+          <div class="d-flex align-items-center gap-12 navbar-logo-section">
+            <img src="assets/images/logos/DW.jpg" 
+                 alt="Logo DW" 
+                 class="dw-logo-avatar clickable-logo" 
+                 (click)="customizerSidenav.open()"
+                 matTooltip="Configuración de tema" />
+            <h6 class="m-0 f-s-18 f-w-600 d-none d-md-block">Vendedores</h6>
+          </div>
+          
+          <!-- Search section (centered on desktop) -->
+          <div class="navbar-search-section">
             <mat-form-field class="hide-hint search-field" appearance="outline">
               <mat-icon matPrefix>search</mat-icon>
-              <input matInput placeholder="Buscar producto" [(ngModel)]="searchText" (ngModelChange)="filterCards()" />
+              <input matInput placeholder="Buscar vendedor" [(ngModel)]="searchText" (ngModelChange)="filterCards()" />
               @if(searchText){
-                <button matSuffix mat-icon-button (click)="getProductList()" aria-label="Limpiar búsqueda"><mat-icon>close</mat-icon></button>
+                <button matSuffix mat-icon-button (click)="clearSearch()" aria-label="Limpiar búsqueda"><mat-icon>close</mat-icon></button>
               }
             </mat-form-field>
           </div>
-        </div>
-  <div class="row m-t-navbar shop-grid">
-    @if(loading && page===1){
-      <!-- Skeleton initial load -->
-      @for(s of [1,2,3,4,5,6,7,8]; track s){
-  <div class="col-6 col-sm-6 col-lg-3 p-x-12 p-sm-0 m-b-24 shop-skeleton-wrapper">
-          <div class="skeleton-card">
-            <div class="skeleton-img"></div>
-            <div class="skeleton-footer">
-              <div class="skeleton-bar long"></div>
-              <div class="skeleton-bar short"></div>
-            </div>
+          
+          <!-- Cart section -->
+          <div class="navbar-cart-section d-flex align-items-center">
+            <button mat-icon-button 
+                    class="cart-btn m-l-8" 
+                    [class.has-items]="getTotalCartItems() > 0"
+                    (click)="openGeneralCart()"
+                    matTooltip="Ver todos los carritos"
+                    [matTooltipDisabled]="getTotalCartItems() === 0">
+              <mat-icon>shopping_cart</mat-icon>
+              @if(getTotalCartItems() > 0) {
+                <span class="cart-badge">{{ getTotalCartItems() }}</span>
+              }
+            </button>
           </div>
         </div>
-      }
-    } @else { 
-      @for(productcard of filteredCards; track productcard.product_name) {
-  <div class="col-6 col-sm-6 col-lg-3 p-x-12 p-sm-0">
-          <mat-card class="cardWithShadow productcard overflow-hidden b-1 cursor-pointer" (click)="getviewDetails(productcard)">
-            <a routerLink="/widgets/cards">
-              <div class="img-wrapper position-relative">
-                <img [src]="productcard.imagePath" alt="imgSrc" class="w-100" mat-card-image />
-                <div class="d-flex align-items-center icon-container">
-                  <!-- Botón eliminar removido -->
-                  <!-- Edit product button removed -->
-                </div>
-              </div>
-            </a>
+    
+    <!-- Multi-select de categorías fijo -->
+    <div class="categories-filter-fixed d-flex justify-content-center align-items-center p-y-8 p-x-16 p-sm-8 bg-white">
+      <div class="d-flex align-items-center gap-8 categories-filter-content">
+        <mat-form-field class="categories-select m-t-20" appearance="outline">
+          <mat-select 
+            [(value)]="selectedCategories" 
+            (selectionChange)="onCategoriesChange()" 
+            multiple 
+            placeholder="Seleccionar categorías">
+            @for(category of allCategories; track category) {
+              <mat-option [value]="category">{{ category }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+        @if(selectedCategories.length > 0) {
+          <button mat-icon-button 
+                  color="warn" 
+                  (click)="clearCategoryFilters()" 
+                  matTooltip="Limpiar filtros de categoría">
+            <mat-icon>clear_all</mat-icon>
+          </button>
+        }
+      </div>
+    </div>
+    
+    <div class="row m-t-navbar shop-grid">
+      @for(vendor of filteredVendors; track vendor.id) {
+        <div class="col-12 col-sm-6 col-lg-3 p-x-12 p-sm-0 m-b-24">
+          <mat-card class="cardWithShadow vendor-card overflow-hidden b-1 cursor-pointer" (click)="selectVendor(vendor)">
+            <div class="img-wrapper position-relative">
+              <img [src]="vendor.logoPath || 'assets/images/placeholder.jpg'" 
+                   [alt]="'Logo del vendedor ' + vendor.name" 
+                   class="w-100" 
+                   style="object-fit: cover;" />
+            </div>
             <mat-card-content class="p-b-24 p-t-12 position-relative">
-              <mat-card-title class="mat-headline-2 f-s-16 m-b-4 product-title text-ellipsis">{{ productcard.product_name }}</mat-card-title>
-              <div class="product-meta-line d-flex align-items-center justify-content-between">
-                <div class="price-line d-flex align-items-center">
-                  @if(productcard.dealPrice && productcard.dealPrice < productcard.base_price){
-                    <span class="price-old f-s-14 f-w-500 m-r-6" aria-label="Precio anterior">{{ productcard.base_price | monedaARS }}</span>
-                    <h6 class="price-current f-s-16 f-w-600 m-0 text-primary" aria-label="Precio con descuento">{{ productcard.dealPrice | monedaARS }}</h6>
-                  } @else {
-                    <h6 class="price-current f-s-16 f-w-600 m-0" aria-label="Precio">{{ productcard.base_price | monedaARS }}</h6>
-                  }
-                </div>
-                <div class="stars-line d-flex align-items-center gap-1">
-                  @if(productcard.rating !== undefined){
-                    @for (star of [1,2,3,4,5]; track star){<i-tabler name="star" class="icon-17 text-warning" [ngClass]="getStarClass(star, productcard.rating )"></i-tabler>}
+              <!-- 1. Logo + Nombre del vendedor -->
+              <div class="vendor-header d-flex align-items-center gap-12 m-b-12">
+                <img [src]="vendor.logoPath || 'assets/images/placeholder.jpg'" 
+                     [alt]="'Logo ' + vendor.name" 
+                     class="vendor-logo" />
+                <div>
+                  <mat-card-title class="mat-headline-2 f-s-16 m-b-2">{{ vendor.name }}</mat-card-title>
+                  @if(vendor.rating) {
+                    <div class="rating-stars d-flex align-items-center gap-1">
+                      @for (star of [1,2,3,4,5]; track star) {
+                        <i-tabler name="star" class="icon-14 text-warning" [ngClass]="getStarClass(star, vendor.rating)"></i-tabler>
+                      }
+                      <span class="f-s-12 text-muted m-l-4">({{ vendor.rating }})</span>
+                    </div>
                   }
                 </div>
               </div>
-              <div class="wholesale-lines f-s-12 m-t-8">
-                <!-- Línea de título removida para evitar duplicación -->
-                @if(productcard.talles){<div class="line"><strong>Talles:</strong> {{ productcard.talles }}</div>}
-                @if(productcard.tela){<div class="line"><strong>Tela:</strong> {{ productcard.tela }}</div>}
-                @if(productcard.generos && productcard.generos.length){<div class="line"><strong>Género:</strong> {{ productcard.generos.join(', ') }}</div>}
-                @if(productcard.categoria){<div class="line"><strong>Categoría:</strong> {{ productcard.categoria }}</div>}
+
+              <!-- 2. Descripción -->
+              @if(vendor.description) {
+                <p class="vendor-description f-s-14 text-muted m-b-12">{{ vendor.description }}</p>
+              }
+
+              <!-- 3. Categorías que vende -->
+              @if(vendor.categories && vendor.categories.length > 0) {
+                <div class="vendor-categories m-b-12">
+                  <div class="f-s-12 f-w-600 text-primary m-b-4">Categorías:</div>
+                  <div class="categories-list d-flex flex-wrap gap-4">
+                    @for(category of vendor.categories; track category) {
+                      <span class="category-chip f-s-11">{{ category }}</span>
+                    }
+                  </div>
+                </div>
+              }
+
+              <!-- 4. Dirección -->
+              @if(vendor.address) {
+                <div class="vendor-address m-b-12">
+                  <div class="d-flex align-items-center gap-4">
+                    <i-tabler name="map-pin" class="icon-14 text-muted"></i-tabler>
+                    <span class="f-s-13 text-muted">{{ vendor.address }}</span>
+                  </div>
+                </div>
+              }
+
+              <!-- 5. Tipo de venta -->
+              @if(vendor.salesType) {
+                <div class="vendor-sales-type m-b-16">
+                  <div class="d-flex align-items-center gap-4">
+                    <i-tabler name="shopping-bag" class="icon-14 text-muted"></i-tabler>
+                    <span class="f-s-13">
+                      @if(vendor.salesType === 'mayor') {
+                        <span class="sales-badge mayor">Venta por Mayor</span>
+                      } @else if(vendor.salesType === 'menor') {
+                        <span class="sales-badge menor">Venta por Menor</span>
+                      } @else if(vendor.salesType === 'ambos') {
+                        <span class="sales-badge ambos">Mayor y Menor</span>
+                      }
+                    </span>
+                  </div>
+                </div>
+              }
+
+              <div class="d-flex justify-content-end m-t-12">
+                <button mat-flat-button color="primary" (click)="$event.stopPropagation(); selectVendor(vendor)">Ver productos</button>
               </div>
             </mat-card-content>
           </mat-card>
         </div>
-      }@empty {
-        <div class="col-12 text-center p-4 m-t-30">
-          <img src="assets/images/products/empty-shopping-cart.svg" width="200" height="200" />
-          <div class="f-s-48 f-w-600">No hay productos</div>
-          <div class="f-s-14 f-w-500">El producto que buscas no está disponible.</div>
-          <button mat-flat-button (click)="getProductList()" class="m-t-10">Intentar nuevamente</button>
-        </div>
       }
-    }
-  </div>
-        <div class="d-flex justify-content-center m-y-16" *ngIf="loading">
-          <mat-progress-spinner diameter="32" mode="indeterminate"></mat-progress-spinner>
-        </div>
-        <div #infiniteAnchor class="infinite-anchor" style="height:1px"></div>
-        @if(!hasMore && !loading){<div class="text-center f-s-12 m-y-8 text-muted">No hay más productos</div>}
+    </div>
       </div>
     </mat-sidenav-content>
   </mat-sidenav-container>

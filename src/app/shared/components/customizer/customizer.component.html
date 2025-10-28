@@ -1,0 +1,82 @@
+<div class="customizer-header">
+  <div class="d-flex align-items-center justify-content-between">
+    <div>
+      <h2 class="header-title">
+        <i-tabler name="settings"></i-tabler>
+        Theme Customizer
+      </h2>
+      <p class="header-subtitle">Customize your app appearance</p>
+    </div>
+    <button mat-icon-button (click)="close()" class="close-button" aria-label="Cerrar">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+</div>
+
+<div class="customizer-content">
+  <!-- Theme Selection Section -->
+  <div class="customizer-section">
+    <h3 class="section-title">
+      <i-tabler name="settings"></i-tabler>
+      Color Theme
+    </h3>
+    <div class="section-content">
+      <div class="theme-options">
+        <div
+          *ngFor="let theme of themes"
+          class="theme-option"
+          [class.active]="currentTheme === theme.id"
+          (click)="selectTheme(theme.id)"
+          [style.--theme-primary]="theme.primary"
+          [style.--theme-secondary]="theme.secondary"
+          [style.--theme-accent]="theme.accent"
+        >
+          <div class="theme-preview">
+            <div class="color-strip primary"></div>
+            <div class="color-strip secondary"></div>
+            <div class="color-strip accent"></div>
+          </div>
+          <div class="theme-label">{{ theme.name }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Direction Selection Section -->
+  <div class="customizer-section">
+    <h3 class="section-title">
+      <i-tabler name="settings"></i-tabler>
+      Text Direction
+    </h3>
+    <div class="section-content">
+      <div class="direction-options">
+        <div
+          class="direction-option"
+          [class.active]="currentDirection === 'ltr'"
+          (click)="selectDirection('ltr')"
+        >
+          <i-tabler name="arrow-left"></i-tabler>
+          <span class="option-label">LTR</span>
+        </div>
+        <div
+          class="direction-option"
+          [class.active]="currentDirection === 'rtl'"
+          (click)="selectDirection('rtl')"
+        >
+          <i-tabler name="arrow-right"></i-tabler>
+          <span class="option-label">RTL</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="customizer-footer">
+  <button
+    class="reset-button"
+    (click)="resetToDefaults()"
+  >
+    <i-tabler name="refresh"></i-tabler>
+    <span>Reset to Defaults</span>
+  </button>
+</div>

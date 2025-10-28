@@ -13,19 +13,21 @@ import { CarouselModule, OwlOptions, CarouselComponent } from 'ngx-owl-carousel-
 import { IconModule } from 'src/app/icon/icon.module';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
-import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialogRef, MatDialog } from '@angular/material/dialog';
 import { ProductService } from 'src/app/services/apps/product/product.service';
 import {
   productcards,
   PRODUCT_DATA,
   VENDORS,
   Vendor,
-  Element,
+  Element as ProductElement,
 } from '../ecommerceData';
 import {
   MockProductApiService,
   ProductDetail,
 } from 'src/app/services/apps/product/mock-product-api.service';
+import { CartService } from 'src/app/services/apps/cart/cart.service';
+import { ConfirmDialogComponent } from './confirm-dialog.component';
 
 interface Slide {
   id: string;
@@ -43,6 +45,8 @@ interface Slide {
 export class ProductDetailsComponent implements AfterViewInit {
   @ViewChild(CarouselComponent) carousel?: CarouselComponent;
   private productService = inject(ProductService);
+  private cartService = inject(CartService);
+  private dialog = inject(MatDialog);
   product: ProductDetail | null = null;
   loading: boolean = true; // spinner inicial
   isSelected = false;
@@ -66,7 +70,7 @@ export class ProductDetailsComponent implements AfterViewInit {
   activeIndex = 0;
   productcards = productcards; // se usará ahora como productos del vendedor
   vendor: Vendor | undefined;
-  vendorProducts: Element[] = [];
+  vendorProducts: ProductElement[] = [];
   // TODO(Revisar futuro): distribución de ratings para pestaña de reseñas
   // ratings = [ { label: 1, value: 30, count: 485 }, { label: 2, value: 20, count: 215 }, { label: 3, value: 10, count: 110 }, { label: 4, value: 60, count: 620 }, { label: 5, value: 15, count: 160 } ];
 
@@ -81,7 +85,7 @@ export class ProductDetailsComponent implements AfterViewInit {
     private api: MockProductApiService,
     @Optional()
     @Inject(MAT_DIALOG_DATA)
-    private dialogData: { productId?: number } | null,
+    private dialogData: { productId?: number; vendor?: Vendor } | null,
     @Optional() private dialogRef?: MatDialogRef<ProductDetailsComponent>
   ) {
     // Si el componente se usa como página normal (no modal), seguimos tomando el id de la ruta
@@ -99,6 +103,13 @@ export class ProductDetailsComponent implements AfterViewInit {
     } else {
       // Modal: recibir id vía data
       if (this.dialogData.productId !== undefined) {
+        // Si se pasó vendor desde el modal, usarlo
+        if (this.dialogData.vendor) {
+          this.vendor = this.dialogData.vendor;
+          console.log('Vendor set from dialogData:', this.vendor);
+        } else {
+          console.warn('No vendor passed from dialogData');
+        }
         this.loadProduct(this.dialogData.productId);
       } else {
         console.error('No se pasó productId al diálogo');
@@ -150,21 +161,31 @@ export class ProductDetailsComponent implements AfterViewInit {
       return '';
     }
   }
-  viewVendorProduct(p: Element) {
+  viewVendorProduct(p: ProductElement) {
     // En modo modal: recargar contenido dentro del mismo diálogo.
     if (this.dialogRef) {
       this.loading = true;
-      this.loadProduct(p.id);
+      this.loadProduct(+p.id);
     } else {
       this.router.navigate(['product', p.id]);
     }
   }
 
   private loadProduct(id: number) {
+    console.log('Loading product with id:', id);
     this.api.getProductById(id).subscribe((detail) => {
+      console.log('Product detail received:', detail);
       this.product = detail;
       if (detail) {
-        this.vendor = detail.vendor;
+        console.log('Vendor from detail:', detail.vendor);
+        console.log('Current vendor before assignment:', this.vendor);
+        // Solo asignar vendor del detail si no tenemos uno del modal
+        if (!this.vendor) {
+          this.vendor = detail.vendor;
+          console.log('Vendor assigned from detail:', this.vendor);
+        } else {
+          console.log('Keeping vendor from modal, ignoring detail vendor');
+        }
         this.vendorProducts = detail.vendorProducts || [];
         this.buildSlides(detail);
       }
@@ -214,6 +235,32 @@ export class ProductDetailsComponent implements AfterViewInit {
     this.activeIndex = i;
     if (this.carousel) {
       this.carousel.to(String(i));
+    }
+  }
+
+  addToCart() {
+    if (this.product && this.vendor) {
+      console.log('ProductDetailsComponent.addToCart called with:', {
+        product: this.product,
+        vendor: this.vendor,
+        quantity: this.quantity
+      });
+      // Agregar al carrito usando el servicio, pasando la cantidad
+      this.cartService.addToCart(this.product, this.vendor.id, this.vendor.name, this.quantity);
+      // Mostrar modal de confirmación
+      this.dialog.open(ConfirmDialogComponent, {
+        data: {
+          title: 'Producto agregado',
+          message: `${this.product.product_name} ha sido agregado al carrito correctamente.`,
+          buttonText: 'Aceptar'
+        },
+        width: '400px'
+      });
+    } else {
+      console.error('Cannot add to cart: product or vendor is missing', {
+        product: this.product,
+        vendor: this.vendor
+      });
     }
   }
 }
