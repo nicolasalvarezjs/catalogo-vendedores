@@ -133,7 +133,7 @@ interface VendorProductsDialogData {
               }
             } @else {
               @for(productcard of filteredCards; track productcard.product_name) {
-                <div class="col-6 p-x-4 p-sm-0">
+                <div class="col-6 col-lg-3 p-x-4 p-sm-0">
                   <mat-card class="cardWithShadow productcard overflow-hidden b-1 cursor-pointer" (click)="getviewDetails(productcard)">
                     <div class="img-wrapper position-relative">
                       <img [src]="productcard.imagePath" alt="imgSrc" class="w-100" mat-card-image />
@@ -339,6 +339,15 @@ interface VendorProductsDialogData {
     @keyframes shimmer {
       0% { background-position: 100% 0; }
       100% { background-position: 0 0; }
+    }
+    .img-wrapper {
+      max-height: 300px;
+      overflow: hidden;
+    }
+    .img-wrapper img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
   `]
 })
