@@ -56,12 +56,16 @@
     <div class="row m-t-navbar shop-grid">
       @for(vendor of filteredVendors; track vendor.id) {
         <div class="col-12 col-sm-6 col-lg-3 p-x-12 p-sm-0 m-b-24">
-          <mat-card class="cardWithShadow vendor-card overflow-hidden b-1 cursor-pointer" (click)="selectVendor(vendor)">
+          <mat-card class="cardWithShadow vendor-card overflow-hidden b-1">
             <div class="img-wrapper position-relative">
-              <img [src]="vendor.logoPath || 'assets/images/placeholder.jpg'" 
-                   [alt]="'Logo del vendedor ' + vendor.name" 
-                   class="w-100" 
-                   style="object-fit: cover; height: 200px;" />
+              @let slides = getVendorSlides(vendor);
+              <owl-carousel-o [options]="customOptions" class="vendor-carousel" (initialized)="onCarouselInitialized()">
+                @for(slide of slides; track slide.id){
+                <ng-template carouselSlide [id]="slide.id">
+                  <img [src]="slide.imgUrl" [alt]="slide.altText" class="w-100" style="object-fit: cover; height: 200px;" />
+                </ng-template>
+                }
+              </owl-carousel-o>
             </div>
             <mat-card-content class="p-b-24 p-t-12 position-relative">
               <!-- 1. Logo + Nombre del vendedor -->

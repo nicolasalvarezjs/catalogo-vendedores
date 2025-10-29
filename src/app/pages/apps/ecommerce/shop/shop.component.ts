@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, AfterViewChecked, ViewChildren, QueryList, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { IconModule } from 'src/app/icon/icon.module';
 import { MaterialModule } from 'src/app/material.module';
@@ -11,6 +11,13 @@ import { CartDialogComponent } from './cart-dialog.component';
 import { CartService } from 'src/app/services/apps/cart/cart.service';
 import { CustomizerComponent } from 'src/app/shared/components/customizer/customizer.component';
 import { CategoriesFilterDialogComponent, CategoriesFilterData } from './categories-filter-dialog.component';
+import { CarouselModule, OwlOptions, CarouselComponent } from 'ngx-owl-carousel-o';
+
+interface Slide {
+  id: string;
+  imgUrl: string;
+  altText: string;
+}
 
 @Component({
   selector: 'app-shop',
@@ -20,11 +27,13 @@ import { CategoriesFilterDialogComponent, CategoriesFilterData } from './categor
     CommonModule,
     FormsModule,
     CustomizerComponent,
+    CarouselModule,
   ],
   templateUrl: './shop.component.html',
   styleUrl: './shop.component.scss',
 })
-export class ShopComponent implements OnInit {
+export class ShopComponent implements OnInit, AfterViewChecked {
+  @ViewChildren(CarouselComponent) carousels!: QueryList<CarouselComponent>;
   private router = inject(Router);
   private dialog = inject(MatDialog);
   private vendorService = inject(VendorService);
@@ -34,9 +43,41 @@ export class ShopComponent implements OnInit {
   filteredVendors: Vendor[] = [];
   selectedCategories: string[] = [];
   allCategories: string[] = [];
+  customOptions: OwlOptions = {
+    loop: true,
+    mouseDrag: true,
+    touchDrag: true,
+    pullDrag: true,
+    dots: false,
+    navSpeed: 500,
+    items: 1,
+    autoHeight: true,
+    autoWidth: false,
+    autoplay: true,
+    autoplayTimeout: 4000,
+    autoplayHoverPause: true,
+    responsive: { 0: { items: 1 }, 400: { items: 1 }, 740: { items: 1 }, 940: { items: 1 } },
+    nav: false,
+  };
   ngOnInit(): void {
     this.loadVendors();
   }
+
+  ngAfterViewChecked(): void {
+    // Forzar actualización de los carruseles con un pequeño delay
+    setTimeout(() => {
+      if (this.carousels) {
+        this.carousels.forEach(carousel => {
+          if (carousel) {
+            // Trigger resize event to force carousel recalculation
+            window.dispatchEvent(new Event('resize'));
+          }
+        });
+      }
+    }, 100);
+  }
+
+  
 
   private loadVendors() {
     this.vendors = this.vendorService.getVendors();
@@ -53,6 +94,35 @@ export class ShopComponent implements OnInit {
     
     console.log('Vendors loaded:', this.vendors);
     console.log('Categories:', this.allCategories);
+  }
+
+  getVendorSlides(vendor: Vendor): Slide[] {
+    if (vendor.images && vendor.images.length > 0) {
+      return vendor.images.map((imgUrl, index) => ({
+        id: `${vendor.id}-slide-${index}`,
+        imgUrl,
+        altText: `Imagen ${index + 1} de ${vendor.name}`
+      }));
+    } else if (vendor.logoPath) {
+      return [{
+        id: `${vendor.id}-logo`,
+        imgUrl: vendor.logoPath,
+        altText: `Logo de ${vendor.name}`
+      }];
+    } else {
+      return [{
+        id: `${vendor.id}-placeholder`,
+        imgUrl: 'assets/images/placeholder.jpg',
+        altText: `Imagen de ${vendor.name}`
+      }];
+    }
+  }
+
+  onCarouselInitialized(): void {
+    // Trigger resize event to ensure carousel displays correctly
+    setTimeout(() => {
+      window.dispatchEvent(new Event('resize'));
+    }, 50);
   }
 
   selectVendor(vendor: Vendor) {

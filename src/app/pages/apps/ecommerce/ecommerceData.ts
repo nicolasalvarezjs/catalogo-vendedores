@@ -2,6 +2,7 @@ export interface Vendor {
   id: string; // identificador único del vendedor
   name: string; // nombre visible
   logoPath?: string; // opcional: logo del vendedor
+  images?: string[]; // opcional: array de imágenes para carrousel
   rating?: number; // rating agregado del vendedor
   description?: string; // descripción del vendedor
   categories?: string[]; // categorías que vende
@@ -52,6 +53,7 @@ export const VENDORS: Vendor[] = [
     id: 'v-alfa',
     name: 'Alfa Distribuciones',
     logoPath: 'assets/images/products/vendedor1.jpg',
+    images: ['assets/images/products/vendedor1.jpg', 'assets/images/ropa/IMG-20240927-WA0087.jpg', 'assets/images/ropa/IMG-20240927-WA0088.jpg'],
     rating: 4.6,
     description: 'Distribuidora especializada en productos textiles y de hogar. Ofrecemos calidad y precios competitivos.',
     categories: ['Ropa', 'Hogar', 'Textiles', 'Juguetes'],
@@ -67,6 +69,7 @@ export const VENDORS: Vendor[] = [
     id: 'v-bravo',
     name: 'Bravo Retail',
     logoPath: 'assets/images/products/vendedor2.jpeg',
+    images: ['assets/images/products/vendedor2.jpeg', 'assets/images/ropa/IMG-20240927-WA0040.jpg', 'assets/images/ropa/IMG-20240927-WA0042.jpg'],
     rating: 4.3,
     description: 'Tienda especializada en electrónica y accesorios tecnológicos. Los mejores productos al mejor precio.',
     categories: ['Electrónica', 'Accesorios', 'Tecnología'],
@@ -80,6 +83,7 @@ export const VENDORS: Vendor[] = [
     id: 'v-charlie',
     name: 'Charlie Imports',
     logoPath: 'assets/images/products/vendedor3.jpeg',
+    images: ['assets/images/products/vendedor3.jpeg', 'assets/images/ropa/IMG-20240927-WA0090.jpg', 'assets/images/ropa/IMG-20240927-WA0090.jpg'],
     rating: 4.8,
     description: 'Importadora directa de productos internacionales. Especialistas en libros y artículos culturales.',
     categories: ['Libros', 'Importados', 'Cultural', 'Educativos'],
@@ -109,6 +113,7 @@ export const VENDORS: Vendor[] = [
     id: 'v-echo',
     name: 'Echo Sportswear',
     logoPath: 'assets/images/logos/DW.jpg',
+    images: ['assets/images/logos/DW.jpg', 'assets/images/ropa/IMG-20240927-WA0025.jpg', 'assets/images/ropa/IMG-20240927-WA0090.jpg'],
     rating: 4.5,
     description: 'Ropa deportiva y fitness de alta calidad. Especialistas en indumentaria para actividades físicas.',
     categories: ['Deportivo', 'Fitness', 'Running', 'Gimnasio'],
@@ -123,6 +128,7 @@ export const VENDORS: Vendor[] = [
     id: 'v-foxtrot',
     name: 'Foxtrot Kids',
     logoPath: 'assets/images/logos/DW.jpg',
+    images: ['assets/images/logos/DW.jpg', 'assets/images/ropa/IMG-20240927-WA0017.jpg', 'assets/images/ropa/IMG-20240927-WA0040.jpg'],
     rating: 4.9,
     description: 'Ropa infantil de calidad premium. Diseños cómodos y duraderos para los más pequeños.',
     categories: ['Infantil', 'Niños', 'Bebés', 'Escolar'],
@@ -137,6 +143,7 @@ export const VENDORS: Vendor[] = [
     id: 'v-golf',
     name: 'Golf Denim',
     logoPath: 'assets/images/logos/DW.jpg',
+    images: ['assets/images/logos/DW.jpg', 'assets/images/ropa/IMG-20240927-WA0087.jpg', 'assets/images/ropa/IMG-20241112-WA0011.jpg'],
     rating: 4.4,
     description: 'Especialistas en jeans y prendas de denim. Calidad premium con cortes modernos.',
     categories: ['Jeans', 'Denim', 'Vaqueros', 'Casual'],
