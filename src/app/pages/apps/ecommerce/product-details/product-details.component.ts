@@ -195,10 +195,10 @@ export class ProductDetailsComponent implements AfterViewInit {
 
   private buildSlides(detail: ProductDetail) {
     const allowedClothing = [
-      'assets/images/products/1.jpg',
-      'assets/images/products/2.jpg',
-      'assets/images/products/3.jpg',
-      'assets/images/products/4.jpg',
+      'assets/images/ropa/IMG-20240927-WA0086.jpg',
+      'assets/images/ropa/IMG-20240927-WA0091.jpg',
+      'assets/images/ropa/IMG-20240927-WA0088.jpg',
+      'assets/images/ropa/IMG-20240927-WA0089.jpg',
     ];
     const images: string[] = Array.isArray((detail as any).images)
       ? (detail as any).images

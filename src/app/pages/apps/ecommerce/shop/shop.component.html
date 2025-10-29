@@ -9,7 +9,7 @@
       <div class="content-wrapper p-sm-0">
         <div class="shop-navbar-fixed d-flex align-items-center gap-16 p-y-12 p-x-16 p-sm-12 b-1 bg-white">
           <!-- Logo section -->
-          <div class="d-flex align-items-center gap-12 navbar-logo-section">
+          <div class="d-flex align-items-center gap-10 navbar-logo-section">
             <img src="assets/images/logos/DW.jpg" 
                  alt="Logo DW" 
                  class="dw-logo-avatar clickable-logo" 
@@ -20,7 +20,7 @@
           
           <!-- Search section (centered on desktop) -->
           <div class="navbar-search-section">
-            <mat-form-field class="hide-hint search-field" appearance="outline">
+            <mat-form-field class="hide-hint search-field small-search" appearance="outline">
               <mat-icon matPrefix>search</mat-icon>
               <input matInput placeholder="Buscar vendedor" [(ngModel)]="searchText" (ngModelChange)="filterCards()" />
               @if(searchText){
@@ -29,7 +29,15 @@
             </mat-form-field>
           </div>
           
-          <!-- Cart section -->
+          <!-- Filter section -->
+          <div class="navbar-filter-section">
+            <button mat-icon-button 
+                    class="filter-btn"
+                    (click)="openCategoriesFilter()"
+                    matTooltip="Filtrar por categorías">
+              <mat-icon>filter_list</mat-icon>
+            </button>
+          </div>
           <div class="navbar-cart-section d-flex align-items-center">
             <button mat-icon-button 
                     class="cart-btn m-l-8" 
@@ -44,31 +52,6 @@
             </button>
           </div>
         </div>
-    
-    <!-- Multi-select de categorías fijo -->
-    <div class="categories-filter-fixed d-flex justify-content-center align-items-center p-y-8 p-x-16 p-sm-8 bg-white">
-      <div class="d-flex align-items-center gap-8 categories-filter-content">
-        <mat-form-field class="categories-select m-t-20" appearance="outline">
-          <mat-select 
-            [(value)]="selectedCategories" 
-            (selectionChange)="onCategoriesChange()" 
-            multiple 
-            placeholder="Seleccionar categorías">
-            @for(category of allCategories; track category) {
-              <mat-option [value]="category">{{ category }}</mat-option>
-            }
-          </mat-select>
-        </mat-form-field>
-        @if(selectedCategories.length > 0) {
-          <button mat-icon-button 
-                  color="warn" 
-                  (click)="clearCategoryFilters()" 
-                  matTooltip="Limpiar filtros de categoría">
-            <mat-icon>clear_all</mat-icon>
-          </button>
-        }
-      </div>
-    </div>
     
     <div class="row m-t-navbar shop-grid">
       @for(vendor of filteredVendors; track vendor.id) {

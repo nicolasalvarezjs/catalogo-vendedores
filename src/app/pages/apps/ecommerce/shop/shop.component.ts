@@ -10,6 +10,7 @@ import { VendorProductsDialogComponent } from './vendor-products-dialog.componen
 import { CartDialogComponent } from './cart-dialog.component';
 import { CartService } from 'src/app/services/apps/cart/cart.service';
 import { CustomizerComponent } from 'src/app/shared/components/customizer/customizer.component';
+import { CategoriesFilterDialogComponent, CategoriesFilterData } from './categories-filter-dialog.component';
 
 @Component({
   selector: 'app-shop',
@@ -111,6 +112,26 @@ export class ShopComponent implements OnInit {
       autoFocus: false,
       restoreFocus: false,
       disableClose: false,
+    });
+  }
+
+  openCategoriesFilter(): void {
+    const dialogData: CategoriesFilterData = {
+      allCategories: this.allCategories,
+      selectedCategories: [...this.selectedCategories]
+    };
+
+    const dialogRef = this.dialog.open(CategoriesFilterDialogComponent, {
+      data: dialogData,
+      width: '400px',
+      autoFocus: false
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result !== undefined) {
+        this.selectedCategories = dialogData.selectedCategories;
+        this.filterCards();
+      }
     });
   }
 

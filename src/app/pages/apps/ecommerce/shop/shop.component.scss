@@ -11,7 +11,7 @@
 	display: flex;
 	flex-wrap: nowrap;
 	align-items: center;
-	gap: 16px;
+	gap: 10px;
 	padding: 12px 16px;
 	
 	// Desktop layout: logo | search (centered) | cart
@@ -67,8 +67,16 @@
 		width: 100%;
 		max-width: 360px; // default max width (tablet & below override later if needed)
 	}
-	.cart-button {
-		position: relative;
+	
+	.small-search {
+		max-width: 200px !important; // Achicar el search input
+	}
+	
+	.navbar-filter-section {
+		flex: 0 0 auto;
+	}
+	
+	.filter-btn {
 		margin-left: 8px;
 	}
 	.cart-badge {
@@ -92,15 +100,15 @@
 		.shop-navbar-fixed .search-field {
 			max-width: 260px; // narrower on large screens
 		}
-	}// Margen superior para el grid de productos debajo del navbar y filtro
+	}// Margen superior para el grid de productos debajo del navbar
 .m-t-navbar {
-  margin-top: 200px; // navbar (~88px) + filtro (~52px con padding reducido)
-  min-height: calc(100vh - 140px);
+  margin-top: 88px; // solo navbar (~88px)
+  min-height: calc(100vh - 88px);
 }
 
 @media (max-width: 767px) {
 	.m-t-navbar {
-    margin-top: 180px; // Ajuste para móvil
+    margin-top: 90px; // Ajuste para móvil
     min-height: calc(100vh - 120px);
   }
 }

@@ -41,11 +41,11 @@ interface VendorProductsDialogData {
         </div>
       </div>
 
-      <div class="modal-navbar d-flex align-items-center p-y-12 p-x-16">
+      <div class="modal-navbar d-flex align-items-center justify-content-between p-y-12 p-x-16">
         <button mat-icon-button class="bg-primary text-white" (click)="sidenav.toggle()" aria-label="Abrir filtros">
           <mat-icon>menu</mat-icon>
         </button>
-        <div class="flex-grow-1 d-flex justify-content-end">
+        <div class="navbar-center">
           <mat-form-field class="hide-hint search-field" appearance="outline">
             <mat-icon matPrefix>search</mat-icon>
             <input matInput placeholder="Buscar producto" [(ngModel)]="searchText" (ngModelChange)="filterCards()" />
@@ -53,13 +53,13 @@ interface VendorProductsDialogData {
               <button matSuffix mat-icon-button (click)="getProductList()" aria-label="Limpiar búsqueda"><mat-icon>close</mat-icon></button>
             }
           </mat-form-field>
-          <button mat-icon-button class="cart-button" (click)="openCart()" aria-label="Carrito">
-            <mat-icon>shopping_cart</mat-icon>
-            @if(getCartItemCount() > 0){
-              <span class="cart-badge">{{ getCartItemCount() }}</span>
-            }
-          </button>
         </div>
+        <button mat-icon-button class="cart-button" (click)="openCart()" aria-label="Carrito">
+          <mat-icon>shopping_cart</mat-icon>
+          @if(getCartItemCount() > 0){
+            <span class="cart-badge">{{ getCartItemCount() }}</span>
+          }
+        </button>
       </div>
 
       <mat-sidenav-container class="modal-content fullscreen-container">
@@ -216,6 +216,11 @@ interface VendorProductsDialogData {
       border-bottom: 1px solid #e0e0e0;
       background: #fff;
     }
+    .navbar-center {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+    }
     mat-sidenav-container {
       width: 100% !important;
       height: 100% !important;
@@ -233,6 +238,10 @@ interface VendorProductsDialogData {
     .search-field {
       width: 100%;
       max-width: 300px;
+      
+      @media (max-width: 767px) {
+        max-width: 280px;
+      }
     }
     .cart-button {
       position: relative;
