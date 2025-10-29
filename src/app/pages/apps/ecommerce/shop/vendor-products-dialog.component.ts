@@ -140,26 +140,22 @@ interface VendorProductsDialogData {
                     </div>
                     <mat-card-content class="p-10 position-relative" style="padding: 10px !important;"> 
                       <mat-card-title class="mat-headline-2 f-s-16 m-b-4 product-title text-ellipsis">{{ productcard.product_name }}</mat-card-title>
-                      <div class="product-meta-line d-flex align-items-center justify-content-between">
+                      <div class="product-meta-line d-flex align-items-center justify-content-between m-b-8">
                         <div class="price-line d-flex align-items-center">
                           @if(productcard.dealPrice && productcard.dealPrice < productcard.base_price){
-                            <span class="price-old f-s-14 f-w-500 m-r-6" aria-label="Precio anterior">{{ productcard.base_price | monedaARS }}</span>
-                            <h6 class="price-current f-s-16 f-w-600 m-0 text-primary" aria-label="Precio con descuento">{{ productcard.dealPrice | monedaARS }}</h6>
+                            <span class="price-old f-s-14 f-w-500 m-r-6 text-muted" aria-label="Precio anterior">{{ productcard.base_price | monedaARS }}</span>
+                            <h6 class="price-current f-s-16 f-w-600 m-0 text-success" aria-label="Precio con descuento">{{ productcard.dealPrice | monedaARS }}</h6>
+                            <span class="discount-badge f-s-12 f-w-600 m-l-6">{{ productcard.discountPercent }}% OFF</span>
                           } @else {
-                            <h6 class="price-current f-s-16 f-w-600 m-0" aria-label="Precio">{{ productcard.base_price | monedaARS }}</h6>
-                          }
-                        </div>
-                        <div class="stars-line d-flex align-items-center gap-1">
-                          @if(productcard.rating !== undefined){
-                            @for (star of [1,2,3,4,5]; track star){<i-tabler name="star" class="icon-17 text-warning" [ngClass]="getStarClass(star, productcard.rating )"></i-tabler>}
+                            <h6 class="price-current f-s-16 f-w-600 m-0 text-primary" aria-label="Precio">{{ productcard.base_price | monedaARS }}</h6>
                           }
                         </div>
                       </div>
-                      <div class="wholesale-lines f-s-12 m-t-8">
-                        @if(productcard.talles){<div class="line"><strong>Talles:</strong> {{ productcard.talles }}</div>}
-                        @if(productcard.tela){<div class="line"><strong>Tela:</strong> {{ productcard.tela }}</div>}
-                        @if(productcard.generos && productcard.generos.length){<div class="line"><strong>Género:</strong> {{ productcard.generos.join(', ') }}</div>}
-                        @if(productcard.categoria){<div class="line"><strong>Categoría:</strong> {{ productcard.categoria }}</div>}
+                      <div class="wholesale-lines f-s-12">
+                        @if(productcard.talles){<div class="line d-flex align-items-center gap-4 m-b-4"><i-tabler name="ruler" class="icon-14 text-muted"></i-tabler><strong>Talles:</strong> <span class="talles-badge">{{ productcard.talles }}</span></div>}
+                        @if(productcard.tela){<div class="line d-flex align-items-center gap-4 m-b-4"><i-tabler name="scissors" class="icon-14 text-muted"></i-tabler><strong>Tela:</strong> {{ productcard.tela }}</div>}
+                        @if(productcard.generos && productcard.generos.length){<div class="line d-flex align-items-center gap-4 m-b-4"><i-tabler name="users" class="icon-14 text-muted"></i-tabler><strong>Género:</strong> {{ productcard.generos.join(', ') }}</div>}
+                        @if(productcard.categoria){<div class="line d-flex align-items-center gap-4"><i-tabler name="tag" class="icon-14 text-muted"></i-tabler><strong>Categoría:</strong> <span class="category-chip">{{ productcard.categoria }}</span></div>}
                       </div>
                     </mat-card-content>
                   </mat-card>
@@ -348,6 +344,33 @@ interface VendorProductsDialogData {
       width: 100%;
       height: 100%;
       object-fit: cover;
+    }
+    .discount-badge {
+      background: #ff4444;
+      color: white;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 11px;
+    }
+    .talles-badge {
+      background: #e3f2fd;
+      color: #1976d2;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+    .category-chip {
+      background: #f3e5f5;
+      color: #7b1fa2;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+    .wholesale-lines .line {
+      margin-bottom: 4px;
+    }
+    .wholesale-lines .line:last-child {
+      margin-bottom: 0;
     }
   `]
 })

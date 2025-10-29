@@ -81,33 +81,23 @@
   @if(vendor){<div class="f-s-14 m-t-4">Vendedor: <span class="f-w-600">{{ vendor.name }}</span></div>}
   <p class="m-t-1 f-s-14 f-w-500">{{ product?.description || 'Descripción no disponible.' }}</p>
   <div class="f-s-14 m-t-8 wholesale-extra">
-  @if(product?.talles){<div class="line"><strong>Talles:</strong> {{ product?.talles }}</div>}
-  @if(product?.tela){<div class="line"><strong>Tela:</strong> {{ product?.tela }}</div>}
-  @if(product?.generos?.length){<div class="line"><strong>Géneros:</strong> {{ product?.generos?.join(', ') }}</div>}
-  @if(product?.categoria){<div class="line"><strong>Categoría:</strong> {{ product?.categoria }}</div>}
+  @if(product?.talles){<div class="line d-flex align-items-center gap-4 m-b-4"><i-tabler name="ruler" class="icon-14 text-muted"></i-tabler><strong>Talles:</strong> <span class="talles-badge">{{ product?.talles }}</span></div>}
+  @if(product?.tela){<div class="line d-flex align-items-center gap-4 m-b-4"><i-tabler name="scissors" class="icon-14 text-muted"></i-tabler><strong>Tela:</strong> {{ product?.tela }}</div>}
+  @if(product?.generos?.length){<div class="line d-flex align-items-center gap-4 m-b-4"><i-tabler name="users" class="icon-14 text-muted"></i-tabler><strong>Géneros:</strong> {{ product?.generos?.join(', ') }}</div>}
+  @if(product?.categoria){<div class="line d-flex align-items-center gap-4"><i-tabler name="tag" class="icon-14 text-muted"></i-tabler><strong>Categoría:</strong> <span class="category-chip">{{ product?.categoria }}</span></div>}
   </div>
-      <ng-container *ngIf="product as p">
-        <div class="d-flex align-items-center price-block m-t-4">
+        <div class="d-flex align-items-center price-block m-t-4" *ngIf="product as p">
           <ng-container *ngIf="p.dealPrice !== undefined && p.base_price !== undefined && p.dealPrice < p.base_price; else baseOnly">
-            <span class="price-old f-s-16 f-w-600 m-r-8" aria-label="Precio anterior">{{ p.base_price | monedaARS }}</span>
-            <span class="f-s-20 f-w-600 text-primary" aria-label="Precio con descuento">{{ p.dealPrice | monedaARS }}</span>
-            <span class="f-s-14 f-w-600 m-l-8 text-success">({{ p.discountPercent || (((p.base_price - p.dealPrice) / p.base_price) * 100) | number:'1.0-0' }}% OFF)</span>
+            <span class="price-old f-s-16 f-w-600 m-r-8 text-muted" aria-label="Precio anterior">{{ p.base_price | monedaARS }}</span>
+            <span class="f-s-20 f-w-600 text-success" aria-label="Precio con descuento">{{ p.dealPrice | monedaARS }}</span>
+            <span class="discount-badge f-s-14 f-w-600 m-l-8">{{ p.discountPercent || (((p.base_price - p.dealPrice) / p.base_price) * 100) | number:'1.0-0' }}% OFF</span>
           </ng-container>
           <ng-template #baseOnly>
-            <span class="f-s-20 f-w-600">{{ p?.base_price | monedaARS }}</span>
+            <span class="f-s-20 f-w-600 text-primary">{{ p?.base_price | monedaARS }}</span>
           </ng-template>
         </div>
-      </ng-container>
       <div class="m-y-24 d-flex ">
-        <div class="d-flex gap-4 m-t-5">
-          @if(product?.rating !== undefined){ @for (star of [1, 2, 3, 4, 5]; track star) {
-          <span>
-            <i-tabler name="star" class="icon-18 text-warning" [ngClass]="getStarClass(star, product?.rating )"></i-tabler>
-          </span> } }
-        </div>
-        <!-- Reseñas deshabilitadas temporalmente: enlace a reseñas
-        <a href="#" class="text-primary f-s-14 f-w-600 text-decoration-none position-absolute m-x-10 m-t-5">236 reseñas</a>
-        -->
+        <!-- Estrellas removidas -->
       </div>
       <mat-divider></mat-divider>
       <div class="d-flex align-items-center">

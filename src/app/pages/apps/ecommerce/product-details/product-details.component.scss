@@ -291,3 +291,30 @@
 @media (max-width: 767px) {
 	.vendor-products-row { --vendor-card-gap: 12px; }
 }
+
+// Badges para detalles del producto
+.talles-badge {
+  background: #e3f2fd;
+  color: #1976d2;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 500;
+  font-size: 12px;
+}
+
+.category-chip {
+  background: #f3e5f5;
+  color: #7b1fa2;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 500;
+  font-size: 12px;
+}
+
+.discount-badge {
+  background: #ff4444;
+  color: white;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+}

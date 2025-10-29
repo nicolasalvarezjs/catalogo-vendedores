@@ -149,18 +149,6 @@ export class ProductDetailsComponent implements AfterViewInit {
   resetToggleValue() {
     this.toggleValue = null;
   }
-  getStarClass(index: number, rating?: number): string {
-    const safeRating = rating ?? 0;
-    const fullStars = Math.floor(safeRating);
-    const partialStars = safeRating % 1 !== 0;
-    if (index < fullStars) {
-      return 'fill-warning';
-    } else if (index === fullStars && partialStars) {
-      return 'text-warning';
-    } else {
-      return '';
-    }
-  }
   viewVendorProduct(p: ProductElement) {
     // En modo modal: recargar contenido dentro del mismo diálogo.
     if (this.dialogRef) {
