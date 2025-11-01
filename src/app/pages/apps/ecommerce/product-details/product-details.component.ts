@@ -9,23 +9,20 @@ import {
 } from '@angular/core';
 import { MaterialModule } from 'src/app/material.module';
 import { MonedaArsPipe } from 'src/app/pipe/moneda-ars.pipe';
-import { CarouselModule, OwlOptions, CarouselComponent } from 'ngx-owl-carousel-o';
+import {
+  CarouselModule,
+  OwlOptions,
+  CarouselComponent,
+} from 'ngx-owl-carousel-o';
 import { IconModule } from 'src/app/icon/icon.module';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
-import { MAT_DIALOG_DATA, MatDialogRef, MatDialog } from '@angular/material/dialog';
-import { ProductService } from 'src/app/services/apps/product/product.service';
 import {
-  productcards,
-  PRODUCT_DATA,
-  VENDORS,
-  Vendor,
-  Element as ProductElement,
-} from '../ecommerceData';
-import {
-  MockProductApiService,
-  ProductDetail,
-} from 'src/app/services/apps/product/mock-product-api.service';
+  MAT_DIALOG_DATA,
+  MatDialogRef,
+  MatDialog,
+} from '@angular/material/dialog';
+import { Vendor } from '../ecommerceData';
 import { CartService } from 'src/app/services/apps/cart/cart.service';
 import { ConfirmDialogComponent } from './confirm-dialog.component';
 
@@ -38,16 +35,22 @@ interface Slide {
 
 @Component({
   selector: 'app-product-details',
-  imports: [MaterialModule, CarouselModule, IconModule, CommonModule, MonedaArsPipe],
+  imports: [
+    MaterialModule,
+    CarouselModule,
+    IconModule,
+    CommonModule,
+    MonedaArsPipe,
+  ],
   templateUrl: './product-details.component.html',
   styleUrl: './product-details.component.scss',
 })
 export class ProductDetailsComponent implements AfterViewInit {
   @ViewChild(CarouselComponent) carousel?: CarouselComponent;
-  private productService = inject(ProductService);
   private cartService = inject(CartService);
   private dialog = inject(MatDialog);
-  product: ProductDetail | null = null;
+  // Backend product shape minimal subset
+  product: any | null = null;
   loading: boolean = true; // spinner inicial
   isSelected = false;
   quantity: number = 1;
@@ -62,15 +65,19 @@ export class ProductDetailsComponent implements AfterViewInit {
     navSpeed: 500,
     items: 1,
     autoHeight: true,
-    responsive: { 0: { items: 1 }, 400: { items: 1 }, 740: { items: 1 }, 940: { items: 1 } },
+    responsive: {
+      0: { items: 1 },
+      400: { items: 1 },
+      740: { items: 1 },
+      940: { items: 1 },
+    },
     nav: false,
   };
   // Slides dinámicos construidos desde product.images (solo ropa 1-4.jpg)
   slides: Slide[] = [];
   activeIndex = 0;
-  productcards = productcards; // se usará ahora como productos del vendedor
   vendor: Vendor | undefined;
-  vendorProducts: ProductElement[] = [];
+  vendorProducts: any[] = [];
   // TODO(Revisar futuro): distribución de ratings para pestaña de reseñas
   // ratings = [ { label: 1, value: 30, count: 485 }, { label: 2, value: 20, count: 215 }, { label: 3, value: 10, count: 110 }, { label: 4, value: 60, count: 620 }, { label: 5, value: 15, count: 160 } ];
 
@@ -82,39 +89,31 @@ export class ProductDetailsComponent implements AfterViewInit {
   constructor(
     private router: Router,
     private route: ActivatedRoute,
-    private api: MockProductApiService,
     @Optional()
     @Inject(MAT_DIALOG_DATA)
-    private dialogData: { productId?: number; vendor?: Vendor } | null,
+    private dialogData: { product?: any; vendor?: Vendor } | null,
     @Optional() private dialogRef?: MatDialogRef<ProductDetailsComponent>
   ) {
-    // Si el componente se usa como página normal (no modal), seguimos tomando el id de la ruta
-    if (!this.dialogData) {
+    if (this.dialogData?.product) {
+      // Modal con producto ya cargado
+      this.product = this.dialogData.product;
+      if (this.dialogData.vendor) this.vendor = this.dialogData.vendor;
+      this.buildSlides(this.product);
+      this.loading = false;
+    } else {
+      // Página normal: esperar id en ruta y producto precargado no disponible.
       this.route.paramMap.subscribe((params) => {
         const idParam = params.get('id');
-        const id = idParam ? +idParam : null;
-        if (id == null) {
+        if (!idParam) {
           console.error('Product id not present in URL');
           this.loading = false;
           return;
         }
-        this.loadProduct(id);
-      });
-    } else {
-      // Modal: recibir id vía data
-      if (this.dialogData.productId !== undefined) {
-        // Si se pasó vendor desde el modal, usarlo
-        if (this.dialogData.vendor) {
-          this.vendor = this.dialogData.vendor;
-          console.log('Vendor set from dialogData:', this.vendor);
-        } else {
-          console.warn('No vendor passed from dialogData');
-        }
-        this.loadProduct(this.dialogData.productId);
-      } else {
-        console.error('No se pasó productId al diálogo');
+        // En versión backend real aquí se haría llamada GET /product/{id} (endpoint futuro)
+        // Por ahora marcamos loading false y fallback.
+        this.product = null;
         this.loading = false;
-      }
+      });
     }
   }
   ngAfterViewInit(): void {
@@ -149,68 +148,28 @@ export class ProductDetailsComponent implements AfterViewInit {
   resetToggleValue() {
     this.toggleValue = null;
   }
-  viewVendorProduct(p: ProductElement) {
-    // En modo modal: recargar contenido dentro del mismo diálogo.
+  viewVendorProduct(p: any) {
     if (this.dialogRef) {
       this.loading = true;
-      this.loadProduct(+p.id);
-    } else {
-      this.router.navigate(['product', p.id]);
-    }
-  }
-
-  private loadProduct(id: number) {
-    console.log('Loading product with id:', id);
-    this.api.getProductById(id).subscribe((detail) => {
-      console.log('Product detail received:', detail);
-      this.product = detail;
-      if (detail) {
-        console.log('Vendor from detail:', detail.vendor);
-        console.log('Current vendor before assignment:', this.vendor);
-        // Solo asignar vendor del detail si no tenemos uno del modal
-        if (!this.vendor) {
-          this.vendor = detail.vendor;
-          console.log('Vendor assigned from detail:', this.vendor);
-        } else {
-          console.log('Keeping vendor from modal, ignoring detail vendor');
-        }
-        this.vendorProducts = detail.vendorProducts || [];
-        this.buildSlides(detail);
-      }
+      this.product = p;
+      this.buildSlides(p);
       this.loading = false;
-    });
+    } else {
+      this.router.navigate(['product', p._id || p.id]);
+    }
   }
 
-  private buildSlides(detail: ProductDetail) {
-    const allowedClothing = [
-      'assets/images/ropa/IMG-20240927-WA0086.jpg',
-      'assets/images/ropa/IMG-20240927-WA0091.jpg',
-      'assets/images/ropa/IMG-20240927-WA0088.jpg',
-      'assets/images/ropa/IMG-20240927-WA0089.jpg',
-    ];
-    const images: string[] = Array.isArray((detail as any).images)
-      ? (detail as any).images
-      : [];
-    // Detecta si es prenda (fashion) o si alguno de los géneros apunta a ropa
-    const isClothing =
-      (detail as any).categoria === 'fashion' ||
-      ((detail as any).generos || []).some((g: string) => ['Mujer', 'Hombre', 'Niño'].includes(g));
+  private loadProduct(_: any) {
+    /* deprecated legacy mock method removed */
+  }
 
-    let selected: string[] = [];
-    if (isClothing) {
-      // filtra solo imágenes permitidas y limita a 4
-      selected = images.filter((img) => allowedClothing.includes(img));
-      if (selected.length === 0) {
-        // fallback: usa todas las clothing si el producto aún no tiene asignadas
-        selected = allowedClothing.slice(0, 4);
-      }
-    } else if (images.length > 0) {
-      // No es ropa, usa sus propias imágenes
-      selected = images.slice(0, 4);
-    } else if (detail.imagePath) {
-      selected = [detail.imagePath];
-    }
-    this.slides = selected.slice(0,5).map((url, idx) => ({
+  private buildSlides(detail: any) {
+    const images: string[] = Array.isArray(detail.images) ? detail.images : [];
+    const selected =
+      images.length > 0
+        ? images.slice(0, 5)
+        : ['assets/images/products/no-image.png'];
+    this.slides = selected.map((url, idx) => ({
       id: String(idx),
       imgUrl: url,
       altText: detail.product_name || `Imagen ${idx + 1}`,
@@ -226,28 +185,40 @@ export class ProductDetailsComponent implements AfterViewInit {
     }
   }
 
+  onImgError(event: Event) {
+    const img = event.target as HTMLImageElement | null;
+    if (img) {
+      img.src = 'assets/images/products/no-image.png';
+    }
+  }
+
   addToCart() {
     if (this.product && this.vendor) {
       console.log('ProductDetailsComponent.addToCart called with:', {
         product: this.product,
         vendor: this.vendor,
-        quantity: this.quantity
+        quantity: this.quantity,
       });
       // Agregar al carrito usando el servicio, pasando la cantidad
-      this.cartService.addToCart(this.product, this.vendor.id, this.vendor.name, this.quantity);
+      this.cartService.addToCart(
+        this.product,
+        this.vendor.id,
+        this.vendor.name,
+        this.quantity
+      );
       // Mostrar modal de confirmación
       this.dialog.open(ConfirmDialogComponent, {
         data: {
           title: 'Producto agregado',
           message: `${this.product.product_name} ha sido agregado al carrito correctamente.`,
-          buttonText: 'Aceptar'
+          buttonText: 'Aceptar',
         },
-        width: '400px'
+        width: '400px',
       });
     } else {
       console.error('Cannot add to cart: product or vendor is missing', {
         product: this.product,
-        vendor: this.vendor
+        vendor: this.vendor,
       });
     }
   }
