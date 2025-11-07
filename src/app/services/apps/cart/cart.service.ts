@@ -5,6 +5,7 @@ export interface CartItem {
   product: any; // ProductListItem
   quantity: number;
   vendorId: string;
+  colorName?: string; // nombre del color seleccionado (no hex)
 }
 
 export interface VendorCart {
@@ -31,8 +32,8 @@ export class CartService {
     return this.getCarts().find(cart => cart.vendorId === vendorId);
   }
 
-  addToCart(product: any, vendorId: string, vendorName: string, quantity: number = 1): void {
-    console.log('CartService.addToCart called with:', { product, vendorId, vendorName, quantity });
+  addToCart(product: any, vendorId: string, vendorName: string, quantity: number = 1, colorName?: string): void {
+    console.log('CartService.addToCart called with:', { product, vendorId, vendorName, quantity, colorName });
     const carts = this.getCarts();
     let vendorCart = carts.find(cart => cart.vendorId === vendorId);
 
@@ -49,15 +50,16 @@ export class CartService {
       console.log('Found existing vendor cart:', vendorCart);
     }
 
-    const existingItem = vendorCart.items.find(item => item.product.id === product.id);
+  const existingItem = vendorCart.items.find(item => item.product.id === product.id && item.colorName === colorName);
     if (existingItem) {
       existingItem.quantity += quantity;
       console.log('Increased quantity for existing item:', existingItem);
     } else {
-      const newItem = {
+      const newItem: CartItem = {
         product,
         quantity: quantity,
-        vendorId
+        vendorId,
+        colorName
       };
       vendorCart.items.push(newItem);
       console.log('Added new item to cart:', newItem);
@@ -116,7 +118,7 @@ export class CartService {
 
   private updateTotal(vendorCart: VendorCart): void {
     vendorCart.total = vendorCart.items.reduce((total, item) => {
-      const price = item.product.base_price;
+      const price = item.product.dealPrice || item.product.base_price;
       return total + (price * item.quantity);
     }, 0);
   }

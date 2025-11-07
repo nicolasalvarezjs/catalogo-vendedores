@@ -430,9 +430,8 @@ export class CartDialogComponent {
 
     targetCart.items.forEach((item: CartItem) => {
       const price = item.product.dealPrice || item.product.base_price;
-      message += `• ${item.product.product_name} - Cantidad: ${
-        item.quantity
-      } - Precio: $${price * item.quantity}\n`;
+      const colorPart = item.colorName ? ` - color: ${item.colorName} ` : '';
+      message += `• ${item.product.product_name}${colorPart}- Cantidad: ${item.quantity} - Precio: $${price * item.quantity}\n`;
     });
 
     message += `\nTotal: $${targetCart.total}\n\n`;
@@ -461,6 +460,7 @@ export class CartDialogComponent {
       vendorObject: this.data.vendor,
       items: targetCart.items.map((i) => ({
         product: i.product.product_name,
+        color: i.colorName,
         qty: i.quantity,
         lineaTotal: (i.product.dealPrice || i.product.base_price) * i.quantity,
       })),

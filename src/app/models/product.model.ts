@@ -8,6 +8,8 @@ export interface Product {
   images?: string[];
   date?: string;
   active?: boolean;
+  // Colores disponibles para el producto (array de pares nombre/hex)
+  colors?: { name: string; hex: string }[];
   // Add other backend fields as needed
 }
 

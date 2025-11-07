@@ -51,6 +51,11 @@ export class ProductDetailsComponent implements AfterViewInit {
   private dialog = inject(MatDialog);
   // Backend product shape minimal subset
   product: any | null = null;
+  // Swatches derivadas del array de colores del producto
+  colorSwatches: { name: string; hex: string }[] = [];
+  // Selección de color (nombre, no hex) para carrito / checkout
+  selectedColorName: string | null = null;
+  selectedColorHex: string | null = null;
   loading: boolean = true; // spinner inicial
   isSelected = false;
   quantity: number = 1;
@@ -97,8 +102,16 @@ export class ProductDetailsComponent implements AfterViewInit {
     if (this.dialogData?.product) {
       // Modal con producto ya cargado
       this.product = this.dialogData.product;
+      console.log('[DETAILS INIT] Producto recibido en dialog:', {
+        id: this.product?._id,
+        name: this.product?.product_name,
+        colorsType: Array.isArray(this.product?.colors) ? 'array' : typeof this.product?.colors,
+        colors: this.product?.colors,
+        legacyColor: this.product?.color,
+      });
       if (this.dialogData.vendor) this.vendor = this.dialogData.vendor;
       this.buildSlides(this.product);
+      this.extractColors(this.product);
       this.loading = false;
     } else {
       // Página normal: esperar id en ruta y producto precargado no disponible.
@@ -153,6 +166,7 @@ export class ProductDetailsComponent implements AfterViewInit {
       this.loading = true;
       this.product = p;
       this.buildSlides(p);
+      this.extractColors(p);
       this.loading = false;
     } else {
       this.router.navigate(['product', p._id || p.id]);
@@ -177,6 +191,31 @@ export class ProductDetailsComponent implements AfterViewInit {
     this.activeIndex = 0;
   }
 
+  private extractColors(detail: any) {
+    const raw = detail?.colors;
+    console.log('[EXTRACT COLORS] Raw colors field:', raw);
+    if (Array.isArray(raw)) {
+      if (raw.length && typeof raw[0] === 'object') {
+        this.colorSwatches = raw
+          .map((c: any) => ({ name: c.name, hex: c.hex }))
+          .filter((c) => c.name && c.hex);
+      } else {
+        this.colorSwatches = raw.map((hex: string) => ({ name: hex, hex }));
+      }
+    } else if (detail?.color) {
+      this.colorSwatches = [{ name: detail.color, hex: detail.color }];
+    } else if (raw && typeof raw === 'object') {
+      this.colorSwatches = Object.keys(raw).map((k) => ({ name: k, hex: raw[k] }));
+    } else {
+      this.colorSwatches = [];
+    }
+    console.log('[EXTRACT COLORS] Parsed swatches:', this.colorSwatches);
+    // Si sólo hay un color, seleccionarlo por defecto
+    if (this.colorSwatches.length === 1) {
+      this.setSelectedColor(this.colorSwatches[0]);
+    }
+  }
+
   goToSlide(i: number) {
     if (i < 0 || i >= this.slides.length) return;
     this.activeIndex = i;
@@ -198,13 +237,15 @@ export class ProductDetailsComponent implements AfterViewInit {
         product: this.product,
         vendor: this.vendor,
         quantity: this.quantity,
+        selectedColorName: this.selectedColorName,
       });
       // Agregar al carrito usando el servicio, pasando la cantidad
       this.cartService.addToCart(
         this.product,
         this.vendor.id,
         this.vendor.name,
-        this.quantity
+        this.quantity,
+        this.selectedColorName || undefined
       );
       // Mostrar modal de confirmación
       this.dialog.open(ConfirmDialogComponent, {
@@ -221,5 +262,11 @@ export class ProductDetailsComponent implements AfterViewInit {
         vendor: this.vendor,
       });
     }
+  }
+
+  setSelectedColor(c: { name: string; hex: string }) {
+    this.selectedColorName = c.name;
+    this.selectedColorHex = c.hex;
+    console.log('[COLOR SELECTED]', c);
   }
 }

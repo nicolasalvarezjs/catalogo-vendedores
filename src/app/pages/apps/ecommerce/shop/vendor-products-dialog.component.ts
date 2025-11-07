@@ -320,6 +320,30 @@ interface VendorProductsDialogData {
                       }}</span>
                     </div>
                     }
+                    @if(productcard.colors && productcard.colors.length){
+                    <div class="line d-flex align-items-center gap-4 m-b-4">
+                      <i-tabler name="palette" class="icon-14 text-muted"></i-tabler>
+                      <strong>Colores:</strong>
+                      <span class="chip-wrapper d-flex flex-wrap gap-4">
+                        @for(c of productcard.colors; track c.hex){
+                        <span class="color-chip" [title]="c.name + ' ' + c.hex">
+                          <span class="mini-swatch" [style.background]="c.hex"></span>
+                          <span class="c-name">{{ c.name }}</span>
+                        </span>
+                        }
+                      </span>
+                    </div>
+                    }
+                    @if((!productcard.colors || !productcard.colors.length) && productcard.color){
+                    <div class="line d-flex align-items-center gap-4 m-b-4">
+                      <i-tabler name="palette" class="icon-14 text-muted"></i-tabler>
+                      <strong>Color:</strong>
+                      <span class="color-chip" [title]="productcard.color">
+                        <span class="mini-swatch" [style.background]="productcard.color"></span>
+                        <span class="c-name">{{ productcard.color }}</span>
+                      </span>
+                    </div>
+                    }
                   </div>
                 </mat-card-content>
               </mat-card>
@@ -644,6 +668,8 @@ export class VendorProductsDialogComponent implements OnInit {
       description: p.description,
       vendorId:
         typeof p.vendorId === 'string' ? p.vendorId : (p.vendorId as any)?._id,
+      colors: p.colors,
+      color: p.color,
     };
   }
 
@@ -662,6 +688,14 @@ export class VendorProductsDialogComponent implements OnInit {
           this.allProducts.push(...mapped);
           this.filteredCards = [...this.allProducts];
           this.backendTotalPages = res.totalPages;
+          if (mapped.length) {
+            console.log('[LOAD PRODUCTS] Debug colores primer producto:', {
+              rawColors: res.products[0].colors,
+              rawColor: (res.products[0] as any).color,
+              mappedColors: mapped[0].colors,
+              mappedColor: mapped[0].color,
+            });
+          }
           if (res.page >= res.totalPages) {
             this.allLoaded = true;
           } else {
@@ -780,6 +814,13 @@ export class VendorProductsDialogComponent implements OnInit {
   }
 
   getviewDetails(product: any) {
+    console.log('[VIEW DETAILS] Producto seleccionado:', {
+      id: product._id,
+      name: product.product_name,
+      colors: product.colors,
+      legacyColor: product.color,
+      vendor: this.data.vendor?.id,
+    });
     this.dialog.open(ProductDetailsComponent, {
       data: {
         product: product, // pasar objeto completo para que detalle tenga descripcion y otras props
@@ -836,9 +877,8 @@ export class VendorProductsDialogComponent implements OnInit {
 
     vendorCart.items.forEach((item: any) => {
       const price = item.product.dealPrice || item.product.base_price;
-      message += `• ${item.product.product_name} - Cantidad: ${
-        item.quantity
-      } - Precio: $${price * item.quantity}\n`;
+      const colorPart = item.colorName ? ` - color: ${item.colorName} ` : '';
+      message += `• ${item.product.product_name}${colorPart}- Cantidad: ${item.quantity} - Precio: $${price * item.quantity}\n`;
     });
 
     message += `\nTotal: $${vendorCart.total}\n\n`;
