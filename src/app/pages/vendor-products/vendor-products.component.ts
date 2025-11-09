@@ -15,8 +15,16 @@ import { Product } from '../../models/product.model';
         <p *ngIf="p.description">{{ p.description }}</p>
         <span class="price" *ngIf="p.precio">$ {{ p.precio }}</span>
         <div class="color-chips" *ngIf="p.colors?.length">
-          <div class="color-chip" *ngFor="let c of p.colors" [title]="c.name + ' ' + c.hex">
-            <span class="swatch" [style.background]="c.hex" aria-label="Color {{ c.name }}" ></span>
+          <div
+            class="color-chip"
+            *ngFor="let c of p.colors"
+            [title]="c.name + ' ' + c.hex"
+          >
+            <span
+              class="swatch"
+              [style.background]="c.hex"
+              [attr.aria-label]="'Color ' + c.name"
+            ></span>
             <span class="color-name">{{ c.name }}</span>
           </div>
         </div>
@@ -67,8 +75,8 @@ import { Product } from '../../models/product.model';
         width: 16px;
         height: 16px;
         border-radius: 50%;
-        border: 1px solid rgba(0,0,0,0.15);
-        box-shadow: 0 0 0 1px rgba(255,255,255,0.6) inset;
+        border: 1px solid rgba(0, 0, 0, 0.15);
+        box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.6) inset;
       }
       .color-chip .color-name {
         max-width: 70px;

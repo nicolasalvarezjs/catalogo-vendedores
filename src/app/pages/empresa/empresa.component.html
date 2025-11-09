@@ -1,0 +1,104 @@
+<div class="empresa-page">
+  <!-- Navbar Back -->
+  <mat-toolbar color="primary" class="empresa-toolbar">
+    <button mat-icon-button aria-label="Volver" (click)="goBack()">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <span class="toolbar-title">{{ titulo }}</span>
+  </mat-toolbar>
+
+  <!-- Hero Banner -->
+  <div class="hero">
+    <div class="hero-content">
+      <img
+        src="assets/images/logos/DW.jpg"
+        alt="Logo Empresa"
+        class="hero-logo"
+      />
+      <h1 class="hero-title">{{ tagline }}</h1>
+      <p class="hero-sub">{{ descripcion }}</p>
+    </div>
+  </div>
+
+  <div class="empresa-wrapper">
+    <!-- Verificación -->
+    <section class="section">
+      <h2>Cómo verificamos a los vendedores</h2>
+      <p>
+        Aplicamos un proceso riguroso para asegurar confiabilidad y
+        transparencia.
+      </p>
+      <ul class="list">
+        <li *ngFor="let paso of verificacion">{{ paso }}</li>
+      </ul>
+    </section>
+
+    <!-- Beneficios -->
+    <section class="section grid-2">
+      <div>
+        <h3>Beneficios para Clientes</h3>
+        <ul class="list">
+          <li *ngFor="let b of beneficiosClientes">{{ b }}</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Beneficios para Vendedores</h3>
+        <ul class="list">
+          <li *ngFor="let b of beneficiosVendedores">{{ b }}</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Contacto -->
+    <section class="section contacto">
+      <h2>Contacto</h2>
+      <div class="contact-grid">
+        <div class="contact-card">
+          <mat-icon>email</mat-icon>
+          <div>
+            <strong>Email:</strong>
+            <a href="mailto:{{ contacto.email }}">{{ contacto.email }}</a>
+          </div>
+        </div>
+        <div class="contact-card">
+          <mat-icon>call</mat-icon>
+          <div>
+            <strong>Teléfono:</strong> <span>{{ contacto.telefono }}</span>
+          </div>
+        </div>
+        <div class="contact-card">
+          <mat-icon>schedule</mat-icon>
+          <div>
+            <strong>Horario:</strong> <span>{{ contacto.horario }}</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Redes Sociales -->
+    <section class="section redes">
+      <h2>Redes & Presencia</h2>
+      <div class="social-links">
+        <a
+          *ngFor="let r of redes"
+          [href]="r.url"
+          target="_blank"
+          rel="noopener"
+          class="social-item"
+          [attr.aria-label]="r.label"
+        >
+          <i-tabler [name]="r.icon" class="icon-20"></i-tabler>
+          <span>{{ r.label }}</span>
+        </a>
+      </div>
+    </section>
+
+    <mat-divider class="m-y-32"></mat-divider>
+    <footer class="footer">
+      <small
+        >&copy; {{ currentYear }} DW Idea — Conectando clientes con fabricantes
+        verificados.</small
+      >
+    </footer>
+  </div>
+</div>

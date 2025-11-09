@@ -20,7 +20,6 @@ import {
 import { VendorProductsDialogComponent } from './vendor-products-dialog.component';
 import { CartDialogComponent } from './cart-dialog.component';
 import { CartService } from 'src/app/services/apps/cart/cart.service';
-import { CustomizerComponent } from 'src/app/shared/components/customizer/customizer.component';
 import {
   CategoriesFilterDialogComponent,
   CategoriesFilterData,
@@ -44,7 +43,6 @@ interface Slide {
     IconModule,
     CommonModule,
     FormsModule,
-    CustomizerComponent,
     CarouselModule,
   ],
   templateUrl: './shop.component.html',
@@ -309,5 +307,10 @@ export class ShopComponent implements OnInit, AfterViewChecked {
     } else {
       return '';
     }
+  }
+
+  // Navegar a la nueva vista de información de la empresa
+  navigateToEmpresa() {
+    this.router.navigate(['/empresa']);
   }
 }

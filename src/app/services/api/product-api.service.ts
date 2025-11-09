@@ -14,6 +14,7 @@ export interface BackendProduct {
   description?: string;
   tela?: string;
   salesType?: string;
+  minPurchase?: number; // mínimo de compra cuando salesType === 'unidad'
   images?: string[];
   active?: boolean;
   rating?: number;

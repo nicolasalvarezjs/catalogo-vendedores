@@ -85,6 +85,8 @@
               [src]="slide.imgUrl"
               [alt]="slide.altText"
               class="rounded w-100"
+              loading="lazy"
+              decoding="async"
               (error)="slide.imgUrl = 'assets/images/products/no-image.png'"
               [class.active]="activeIndex === +slide.id"
               [attr.data-index]="slide.id"
@@ -98,6 +100,8 @@
           [src]="product?.imagePath || 'assets/images/products/no-image.png'"
           alt="producto"
           class="rounded w-100"
+          loading="lazy"
+          decoding="async"
           (error)="onImgError($event)"
         />
         }
@@ -110,13 +114,23 @@
           Vendedor: <span class="f-w-600">{{ vendor.name }}</span>
         </div>
         }
-        <p class="m-t-1 f-s-14 f-w-500">
-          {{
-            product?.description ||
-              product?.desc ||
-              "Descripción no disponible."
-          }}
-        </p>
+        <div
+          class="m-t-4 f-s-14 f-w-500 sales-type-line"
+          *ngIf="product?.salesType as st"
+        >
+          <ng-container [ngSwitch]="st">
+            <span *ngSwitchCase="'unidad'">
+              Venta por <strong>unidad</strong>
+              <ng-container *ngIf="minPurchase > 1">
+                | Mínimo: <strong>{{ minPurchase }}</strong></ng-container
+              >
+            </span>
+            <span *ngSwitchDefault>
+              Curva:
+              <strong>{{ formatTalles(product?.talles) || "N/D" }}</strong>
+            </span>
+          </ng-container>
+        </div>
         <div class="f-s-14 m-t-8 wholesale-extra">
           @if(product?.talles){
           <div class="line d-flex align-items-center gap-4 m-b-4">
@@ -153,6 +167,35 @@
           </div>
           }
         </div>
+        @if(product?.salesType === 'unidad' && product?.talles){
+        <div class="sizes-select-block m-t-4 m-b-16">
+          <label class="f-s-14 f-w-600 d-block m-b-6">Seleccioná talles</label>
+          <div class="sizes-chips d-flex flex-wrap gap-6">
+            @for(size of sizesAvailable; track size){
+            <button
+              type="button"
+              class="size-chip"
+              [class.selected]="isSizeSelected(size.trim())"
+              (click)="toggleSize(size.trim())"
+              [attr.aria-pressed]="isSizeSelected(size.trim())"
+              [title]="size.trim()"
+            >
+              <span>{{ size.trim() }}</span>
+            </button>
+            }
+          </div>
+          <div
+            class="f-s-12 text-muted m-t-4"
+            *ngIf="selectedSizes.length === 0"
+          >
+            Elegí al menos un talle.
+          </div>
+          <div class="f-s-12 m-t-4" *ngIf="selectedSizes.length > 0">
+            Talles seleccionados:
+            <strong>{{ selectedSizes.join(", ") }}</strong>
+          </div>
+        </div>
+        }
         <div
           class="d-flex align-items-center price-block m-t-4"
           *ngIf="product as p"
@@ -193,23 +236,35 @@
           <!-- Estrellas removidas -->
         </div>
         <mat-divider></mat-divider>
-        <div class="colors-block m-t-16" *ngIf="colorSwatches.length || product?.color">
-          <label class="f-s-16 f-w-600 m-b-8 d-block">Colores disponibles</label>
+        <div
+          class="colors-block m-t-16"
+          *ngIf="colorSwatches.length || product?.color"
+        >
+          <label class="f-s-16 f-w-600 m-b-8 d-block"
+            >Colores disponibles</label
+          >
           <div class="color-chips">
             @for(c of colorSwatches; track c.hex){
-            <button type="button" class="color-chip" [class.selected]="c.name === selectedColorName" (click)="setSelectedColor(c)" [title]="c.name">
+            <button
+              type="button"
+              class="color-chip"
+              [class.selected]="c.name === selectedColorName"
+              (click)="setSelectedColor(c)"
+              [title]="c.name"
+            >
               <span class="swatch" [style.background]="c.hex"></span>
               <span class="color-name">{{ c.name }}</span>
             </button>
-            }
-            @if(!colorSwatches.length && product?.color){
+            } @if(!colorSwatches.length && product?.color){
             <div class="color-chip legacy" [title]="product.color">
               <span class="swatch" [style.background]="product.color"></span>
               <span class="color-name">{{ product.color }}</span>
             </div>
             }
           </div>
-          <div class="selected-color-label" *ngIf="selectedColorName">Color seleccionado: <strong>{{ selectedColorName }}</strong></div>
+          <div class="selected-color-label" *ngIf="selectedColorName">
+            Color seleccionado: <strong>{{ selectedColorName }}</strong>
+          </div>
         </div>
         <div class="d-flex align-items-center m-b-30">
           <label class="f-s-16 f-w-600">Cant:</label>
@@ -220,6 +275,7 @@
             multiple
           >
             <mat-button-toggle
+              [disabled]="isDecreaseDisabled()"
               (click)="decreaseQty(); toggleGroup.value = null"
               disableRipple
               >-</mat-button-toggle
@@ -232,6 +288,14 @@
             >
           </mat-button-toggle-group>
         </div>
+        @if(product?.salesType === 'unidad' && minPurchase > 1){
+        <div class="f-s-12 text-muted m-t--20 m-b-20">
+          Compra mínima: <strong>{{ minPurchase }}</strong> unidad<span
+            *ngIf="minPurchase > 1"
+            >es</span
+          >.
+        </div>
+        }
         <mat-divider></mat-divider>
         <div class="d-flex align-items-center m-y-20">
           <!-- Botón de agregar al carrito -->
@@ -239,6 +303,11 @@
             mat-flat-button
             color="primary"
             class="add-to-cart-btn"
+            [disabled]="
+              product?.salesType === 'unidad' &&
+              product?.talles &&
+              selectedSizes.length === 0
+            "
             (click)="addToCart()"
           >
             <div class="d-flex align-items-center">

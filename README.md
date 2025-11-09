@@ -75,3 +75,34 @@ Abrir `http://localhost:4200`.
 - Añadir manejo de errores visual (snackbar/toast).
 - Implementar búsqueda y filtros directamente contra la API (categorías, precio).
 - Cachear páginas cargadas en un store (RxJS, Signal, NgRx si escala).
+
+## Página "Quiénes Somos" (`/empresa`)
+
+Se reemplazó el antiguo click del logo (que abría el customizer) por una navegación a la nueva vista institucional.
+
+Características principales:
+
+- Hero con logo, tagline y descripción de la propuesta de valor.
+- Sección de verificación explicando el proceso aplicado a vendedores.
+- Beneficios diferenciados para clientes y para vendedores.
+- Datos de contacto (email, teléfono, horario) y enlaces a redes sociales.
+- Botón de regreso (flecha) en un toolbar fijo superior.
+
+Extensión técnica:
+
+- Componente standalone `EmpresaComponent` (`src/app/pages/empresa/empresa.component.ts`).
+- Importa `MaterialModule` e `IconModule` para aprovechar Angular Material y Tabler Icons.
+- Ruta añadida en `app.routes.ts`: `{ path: 'empresa', component: EmpresaComponent }`.
+
+Accesibilidad / UX:
+
+- Botón de regreso con `aria-label="Volver"`.
+- Enlaces sociales con `rel="noopener"` y etiquetas accesibles.
+- Colores contrastados en el banner (gradiente) y tamaño de fuente adaptable.
+
+Personalización futura:
+
+- Reemplazar datos de contacto placeholder por reales.
+- Añadir sección de equipo, valores y certificaciones.
+- Incluir métricas (número de vendedores verificados, tiempo promedio de verificación).
+- Agregar link a políticas de calidad y proceso de auditoría.

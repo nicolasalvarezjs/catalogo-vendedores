@@ -299,17 +299,24 @@ interface VendorProductsDialogData {
                       ><strong>Tela:</strong> {{ productcard.tela }}
                     </div>
                     } @if(productcard.generos && productcard.generos.length){
-                    <div class="line d-flex align-items-center gap-4 m-b-4">
-                      <i-tabler
-                        name="users"
-                        class="icon-14 text-muted"
-                      ></i-tabler>
-                      <strong>Género:</strong>
-                      <span class="chip-wrapper d-flex flex-wrap gap-4">
+                    <div class="line generos-line m-b-4">
+                      <div class="d-flex align-items-center gap-4">
+                        <i-tabler
+                          name="users"
+                          class="icon-14 text-muted"
+                        ></i-tabler>
+                        <strong class="f-w-600">Géneros:</strong>
+                      </div>
+                      <div class="generos-row d-flex gap-6 m-t-4">
                         @for(g of productcard.generos; track g){
-                        <span class="category-chip genero-chip">{{ g }}</span>
+                        <span
+                          class="genero-pill"
+                          [title]="g"
+                          [attr.aria-label]="'Género ' + g"
+                          >{{ g }}</span
+                        >
                         }
-                      </span>
+                      </div>
                     </div>
                     } @if(productcard.categoria){
                     <div class="line d-flex align-items-center gap-4">
@@ -319,27 +326,43 @@ interface VendorProductsDialogData {
                         productcard.categoria
                       }}</span>
                     </div>
-                    }
-                    @if(productcard.colors && productcard.colors.length){
-                    <div class="line d-flex align-items-center gap-4 m-b-4">
-                      <i-tabler name="palette" class="icon-14 text-muted"></i-tabler>
-                      <strong>Colores:</strong>
-                      <span class="chip-wrapper d-flex flex-wrap gap-4">
-                        @for(c of productcard.colors; track c.hex){
-                        <span class="color-chip" [title]="c.name + ' ' + c.hex">
-                          <span class="mini-swatch" [style.background]="c.hex"></span>
-                          <span class="c-name">{{ c.name }}</span>
-                        </span>
+                    } @if(productcard.colors && productcard.colors.length){
+                    <div class="line colors-line m-b-4">
+                      <div class="d-flex align-items-center gap-4">
+                        <i-tabler
+                          name="palette"
+                          class="icon-14 text-muted"
+                        ></i-tabler>
+                        <strong class="f-w-600">Colores:</strong>
+                      </div>
+                      <div class="color-avatars d-flex flex-wrap gap-6 m-t-4">
+                        @for(c of productcard.colors; track c._id){
+                        <div
+                          class="color-avatar"
+                          [title]="c.name + ' ' + c.hex"
+                          [attr.aria-label]="c.name"
+                        >
+                          <span
+                            class="swatch"
+                            [style.background]="c.hex"
+                          ></span>
+                        </div>
                         }
-                      </span>
+                      </div>
                     </div>
-                    }
-                    @if((!productcard.colors || !productcard.colors.length) && productcard.color){
+                    } @if((!productcard.colors || !productcard.colors.length) &&
+                    productcard.color){
                     <div class="line d-flex align-items-center gap-4 m-b-4">
-                      <i-tabler name="palette" class="icon-14 text-muted"></i-tabler>
+                      <i-tabler
+                        name="palette"
+                        class="icon-14 text-muted"
+                      ></i-tabler>
                       <strong>Color:</strong>
                       <span class="color-chip" [title]="productcard.color">
-                        <span class="mini-swatch" [style.background]="productcard.color"></span>
+                        <span
+                          class="mini-swatch"
+                          [style.background]="productcard.color"
+                        ></span>
                         <span class="c-name">{{ productcard.color }}</span>
                       </span>
                     </div>
@@ -585,6 +608,75 @@ interface VendorProductsDialogData {
       .wholesale-lines .line:last-child {
         margin-bottom: 0;
       }
+      /* Color avatars */
+      .colors-line strong {
+        font-size: 12px;
+      }
+      .color-avatars {
+        --avatar-size: 18px;
+      }
+      .color-avatar {
+        width: var(--avatar-size);
+        height: var(--avatar-size);
+        border-radius: 50%;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.15);
+        overflow: hidden;
+      }
+      .color-avatar .swatch {
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+      }
+      .color-avatar:hover {
+        box-shadow: 0 0 0 2px var(--mat-sys-primary, #1976d2);
+      }
+      .color-avatar:focus-within {
+        outline: 2px solid var(--mat-sys-primary, #1976d2);
+        outline-offset: 2px;
+      }
+      .color-avatar + .color-avatar {
+        margin-left: 4px;
+      }
+      @supports not (gap: 6px) {
+        .color-avatars {
+          margin-left: -4px;
+        }
+        .color-avatar {
+          margin-left: 4px;
+        }
+      }
+      /* Generos pills */
+      .generos-line strong {
+        font-size: 12px;
+      }
+      .generos-row {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        scrollbar-width: none;
+      }
+      .generos-row::-webkit-scrollbar {
+        display: none;
+      }
+      .genero-pill {
+        background: #e8f5e9;
+        color: #1b5e20;
+        padding: 2px 8px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 500;
+        white-space: nowrap;
+        box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08);
+      }
+      .genero-pill + .genero-pill {
+        margin-left: 4px;
+      }
+      .genero-pill:hover {
+        box-shadow: 0 0 0 2px var(--mat-sys-primary, #1976d2);
+      }
     `,
   ],
 })
@@ -656,10 +748,12 @@ export class VendorProductsDialogComponent implements OnInit {
       product_name: p.product_name,
       base_price: p.base_price,
       dealPrice: p.base_price, // si hay precio oferta luego se ajusta
+      // Mantener primera imagen como imagePath (legacy) pero conservar array completo
       imagePath:
         p.images && p.images.length > 0
           ? p.images[0]
           : 'assets/images/products/no-image.png',
+      images: p.images || [], // NUEVO: pasar arreglo completo al details
       categoria: p.categoria,
       generos: p.generos,
       talles: p.talles,
@@ -670,6 +764,8 @@ export class VendorProductsDialogComponent implements OnInit {
         typeof p.vendorId === 'string' ? p.vendorId : (p.vendorId as any)?._id,
       colors: p.colors,
       color: p.color,
+      salesType: p.salesType,
+      minPurchase: p.minPurchase,
     };
   }
 
@@ -878,7 +974,15 @@ export class VendorProductsDialogComponent implements OnInit {
     vendorCart.items.forEach((item: any) => {
       const price = item.product.dealPrice || item.product.base_price;
       const colorPart = item.colorName ? ` - color: ${item.colorName} ` : '';
-      message += `• ${item.product.product_name}${colorPart}- Cantidad: ${item.quantity} - Precio: $${price * item.quantity}\n`;
+      const sizesPart =
+        item.sizes && item.sizes.length
+          ? ` - talles: [${item.sizes.join(', ')}]`
+          : '';
+      message += `• ${
+        item.product.product_name
+      }${colorPart}${sizesPart} - Cantidad: ${item.quantity} - Precio: $${
+        price * item.quantity
+      }\n`;
     });
 
     message += `\nTotal: $${vendorCart.total}\n\n`;

@@ -1,145 +1,189 @@
 <mat-card class="cardWithShadow overflow-hidden position-relative">
-  <mat-sidenav-container class="email-box">
-    <mat-sidenav #customizerSidenav mode="over" position="end" class="customizer-sidenav">
-      <app-customizer (closeCustomizer)="customizerSidenav.close()"></app-customizer>
-    </mat-sidenav>
-    <mat-sidenav-content>
-      <!-- Customizer Overlay -->
-      <div class="customizer-overlay" [class.visible]="customizerSidenav.opened" (click)="customizerSidenav.close()"></div>
-      <div class="content-wrapper p-sm-0">
-        <div class="shop-navbar-fixed d-flex align-items-center gap-16 p-y-12 p-x-16 p-sm-12 b-1 bg-white">
-          <!-- Logo section -->
-          <div class="d-flex align-items-center gap-10 navbar-logo-section">
-            <img src="assets/images/logos/DW.jpg" 
-                 alt="Logo DW" 
-                 class="dw-logo-avatar clickable-logo" 
-                 (click)="customizerSidenav.open()"
-                 matTooltip="Configuración de tema" />
-            <h6 class="m-0 f-s-18 f-w-600 d-none d-md-block">Vendedores</h6>
-          </div>
-          
-          <!-- Search section (centered on desktop) -->
-          <div class="navbar-search-section">
-            <mat-form-field class="hide-hint search-field small-search" appearance="outline">
-              <mat-icon matPrefix>search</mat-icon>
-              <input matInput placeholder="Buscar vendedor" [(ngModel)]="searchText" (ngModelChange)="filterCards()" />
-              @if(searchText){
-                <button matSuffix mat-icon-button (click)="clearSearch()" aria-label="Limpiar búsqueda"><mat-icon>close</mat-icon></button>
-              }
-            </mat-form-field>
-          </div>
-          
-          <!-- Filter section -->
-          <div class="navbar-filter-section">
-            <button mat-icon-button 
-                    class="filter-btn"
-                    (click)="openCategoriesFilter()"
-                    matTooltip="Filtrar por categorías">
-              <mat-icon>filter_list</mat-icon>
-            </button>
-          </div>
-          <div class="navbar-cart-section d-flex align-items-center">
-            <button mat-icon-button 
-                    class="cart-btn m-l-8" 
-                    [class.has-items]="getTotalCartItems() > 0"
-                    (click)="openGeneralCart()"
-                    matTooltip="Ver todos los carritos"
-                    [matTooltipDisabled]="getTotalCartItems() === 0">
-              <mat-icon>shopping_cart</mat-icon>
-              @if(getTotalCartItems() > 0) {
-                <span class="cart-badge">{{ getTotalCartItems() }}</span>
-              }
-            </button>
-          </div>
-        </div>
-    
+  <div class="content-wrapper p-sm-0">
+    <div
+      class="shop-navbar-fixed d-flex align-items-center gap-16 p-y-12 p-x-16 p-sm-12 b-1 bg-white"
+    >
+      <!-- Logo section -->
+      <div class="d-flex align-items-center gap-10 navbar-logo-section">
+        <img
+          src="assets/images/logos/DW.jpg"
+          alt="Logo DW"
+          class="dw-logo-avatar clickable-logo"
+          (click)="navigateToEmpresa()"
+          matTooltip="Ver información de la empresa"
+        />
+        <h6 class="m-0 f-s-18 f-w-600 d-none d-md-block">Vendedores</h6>
+      </div>
+
+      <!-- Search section (centered on desktop) -->
+      <div class="navbar-search-section">
+        <mat-form-field
+          class="hide-hint search-field small-search"
+          appearance="outline"
+        >
+          <mat-icon matPrefix>search</mat-icon>
+          <input
+            matInput
+            placeholder="Buscar vendedor"
+            [(ngModel)]="searchText"
+            (ngModelChange)="filterCards()"
+          />
+          @if(searchText){
+          <button
+            matSuffix
+            mat-icon-button
+            (click)="clearSearch()"
+            aria-label="Limpiar búsqueda"
+          >
+            <mat-icon>close</mat-icon>
+          </button>
+          }
+        </mat-form-field>
+      </div>
+
+      <!-- Filter section -->
+      <div class="navbar-filter-section">
+        <button
+          mat-icon-button
+          class="filter-btn"
+          (click)="openCategoriesFilter()"
+          matTooltip="Filtrar por categorías"
+        >
+          <mat-icon>filter_list</mat-icon>
+        </button>
+      </div>
+      <div class="navbar-cart-section d-flex align-items-center">
+        <button
+          mat-icon-button
+          class="cart-btn m-l-8"
+          [class.has-items]="getTotalCartItems() > 0"
+          (click)="openGeneralCart()"
+          matTooltip="Ver todos los carritos"
+          [matTooltipDisabled]="getTotalCartItems() === 0"
+        >
+          <mat-icon>shopping_cart</mat-icon>
+          @if(getTotalCartItems() > 0) {
+          <span class="cart-badge">{{ getTotalCartItems() }}</span>
+          }
+        </button>
+      </div>
+    </div>
+
     <div class="row m-t-navbar shop-grid">
       @for(vendor of filteredVendors; track vendor.id) {
-        <div class="col-12 col-sm-6 col-lg-3 p-x-12 p-sm-0 m-b-24">
-          <mat-card class="cardWithShadow vendor-card overflow-hidden b-1">
-            <div class="img-wrapper position-relative">
-              @let slides = getVendorSlides(vendor);
-              <owl-carousel-o [options]="customOptions" class="vendor-carousel" (initialized)="onCarouselInitialized()">
-                @for(slide of slides; track slide.id){
-                <ng-template carouselSlide [id]="slide.id">
-                  <img [src]="slide.imgUrl" [alt]="slide.altText" class="w-100" style="object-fit: cover; height: 200px;" />
-                </ng-template>
-                }
-              </owl-carousel-o>
-            </div>
-            <mat-card-content class="p-b-24 p-t-12 position-relative">
-              <!-- 1. Logo + Nombre del vendedor -->
-              <div class="vendor-header d-flex align-items-center gap-12 m-b-12">
-                <img [src]="vendor.logoPath || 'assets/images/placeholder.jpg'" 
-                     [alt]="'Logo ' + vendor.name" 
-                     class="vendor-logo" />
-                <div>
-                  <mat-card-title class="mat-headline-2 f-s-16 m-b-2">{{ vendor.name }}</mat-card-title>
-                  @if(vendor.rating) {
-                    <div class="rating-stars d-flex align-items-center gap-1">
-                      @for (star of [1,2,3,4,5]; track star) {
-                        <i-tabler name="star" class="icon-14 text-warning" [ngClass]="getStarClass(star, vendor.rating)"></i-tabler>
-                      }
-                      <span class="f-s-12 text-muted m-l-4">({{ vendor.rating }})</span>
-                    </div>
+      <div class="col-12 col-sm-6 col-lg-3 p-x-12 p-sm-0 m-b-24">
+        <mat-card class="cardWithShadow vendor-card overflow-hidden b-1">
+          <div class="img-wrapper position-relative">
+            @let slides = getVendorSlides(vendor);
+            <owl-carousel-o
+              [options]="customOptions"
+              class="vendor-carousel"
+              (initialized)="onCarouselInitialized()"
+            >
+              @for(slide of slides; track slide.id){
+              <ng-template carouselSlide [id]="slide.id">
+                <img
+                  [src]="slide.imgUrl"
+                  [alt]="slide.altText"
+                  class="w-100"
+                  style="object-fit: cover; height: 200px"
+                />
+              </ng-template>
+              }
+            </owl-carousel-o>
+          </div>
+          <mat-card-content class="p-b-24 p-t-12 position-relative">
+            <!-- 1. Logo + Nombre del vendedor -->
+            <div class="vendor-header d-flex align-items-center gap-12 m-b-12">
+              <img
+                [src]="vendor.logoPath || 'assets/images/placeholder.jpg'"
+                [alt]="'Logo ' + vendor.name"
+                class="vendor-logo"
+              />
+              <div>
+                <mat-card-title class="mat-headline-2 f-s-16 m-b-2">{{
+                  vendor.name
+                }}</mat-card-title>
+                @if(vendor.rating) {
+                <div class="rating-stars d-flex align-items-center gap-1">
+                  @for (star of [1,2,3,4,5]; track star) {
+                  <i-tabler
+                    name="star"
+                    class="icon-14 text-warning"
+                    [ngClass]="getStarClass(star, vendor.rating)"
+                  ></i-tabler>
                   }
+                  <span class="f-s-12 text-muted m-l-4"
+                    >({{ vendor.rating }})</span
+                  >
                 </div>
+                }
               </div>
+            </div>
 
-              <!-- 2. Descripción -->
-              @if(vendor.description) {
-                <p class="vendor-description f-s-14 text-muted m-b-12">{{ vendor.description }}</p>
-              }
+            <!-- 2. Descripción -->
+            @if(vendor.description) {
+            <p class="vendor-description f-s-14 text-muted m-b-12">
+              {{ vendor.description }}
+            </p>
+            }
 
-              <!-- 3. Categorías que vende -->
-              @if(vendor.categories && vendor.categories.length > 0) {
-                <div class="vendor-categories m-b-12">
-                  <div class="f-s-12 f-w-600 text-primary m-b-4">Categorías:</div>
-                  <div class="categories-list d-flex flex-wrap gap-4">
-                    @for(category of vendor.categories; track category) {
-                      <span class="category-chip f-s-11">{{ category }}</span>
-                    }
-                  </div>
-                </div>
-              }
-
-              <!-- 4. Dirección -->
-              @if(vendor.address) {
-                <div class="vendor-address m-b-12">
-                  <div class="d-flex align-items-center gap-4">
-                    <i-tabler name="map-pin" class="icon-14 text-muted"></i-tabler>
-                    <span class="f-s-13 text-muted">{{ vendor.address }}</span>
-                  </div>
-                </div>
-              }
-
-              <!-- 5. Tipo de venta -->
-              @if(vendor.salesType) {
-                <div class="vendor-sales-type m-b-16">
-                  <div class="d-flex align-items-center gap-4">
-                    <i-tabler name="shopping-bag" class="icon-14 text-muted"></i-tabler>
-                    <span class="f-s-13">
-                      @if(vendor.salesType === 'mayor') {
-                        <span class="sales-badge mayor">Venta por Mayor</span>
-                      } @else if(vendor.salesType === 'menor') {
-                        <span class="sales-badge menor">Venta por Menor</span>
-                      } @else if(vendor.salesType === 'ambos') {
-                        <span class="sales-badge ambos">Mayor y Menor</span>
-                      }
-                    </span>
-                  </div>
-                </div>
-              }
-
-              <div class="d-flex justify-content-end m-t-12">
-                <button mat-flat-button color="primary" (click)="$event.stopPropagation(); selectVendor(vendor)">Ver productos</button>
+            <!-- 3. Categorías que vende -->
+            @if(vendor.categories && vendor.categories.length > 0) {
+            <div class="vendor-categories m-b-12">
+              <div class="f-s-12 f-w-600 text-primary m-b-4">Categorías:</div>
+              <div class="categories-list d-flex flex-wrap gap-4">
+                @for(category of vendor.categories; track category) {
+                <span class="category-chip f-s-11">{{ category }}</span>
+                }
               </div>
-            </mat-card-content>
-          </mat-card>
-        </div>
+            </div>
+            }
+
+            <!-- 4. Dirección -->
+            @if(vendor.address) {
+            <div class="vendor-address m-b-12">
+              <div class="d-flex align-items-center gap-4">
+                <i-tabler name="map-pin" class="icon-14 text-muted"></i-tabler>
+                <span class="f-s-13 text-muted">{{ vendor.address }}</span>
+              </div>
+            </div>
+            }
+
+            <!-- 5. Tipo de venta -->
+            @if(vendor.salesType) {
+            <div class="vendor-sales-type m-b-16">
+              <div class="d-flex align-items-center gap-4">
+                <i-tabler
+                  name="shopping-bag"
+                  class="icon-14 text-muted"
+                ></i-tabler>
+                <span class="f-s-13">
+                  @if(vendor.salesType === 'mayor') {
+                  <span class="sales-badge mayor">Venta por Mayor</span>
+                  } @else if(vendor.salesType === 'menor') {
+                  <span class="sales-badge menor">Venta por Menor</span>
+                  } @else if(vendor.salesType === 'ambos') {
+                  <span class="sales-badge ambos">Mayor y Menor</span>
+                  }
+                </span>
+              </div>
+            </div>
+            }
+
+            <div class="d-flex justify-content-end m-t-12">
+              <button
+                mat-flat-button
+                color="primary"
+                (click)="$event.stopPropagation(); selectVendor(vendor)"
+              >
+                Ver productos
+              </button>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
       }
     </div>
-      </div>
-    </mat-sidenav-content>
-  </mat-sidenav-container>
+  </div>
 </mat-card>

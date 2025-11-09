@@ -431,12 +431,17 @@ export class CartDialogComponent {
     targetCart.items.forEach((item: CartItem) => {
       const price = item.product.dealPrice || item.product.base_price;
       const colorPart = item.colorName ? ` - color: ${item.colorName} ` : '';
-      message += `• ${item.product.product_name}${colorPart}- Cantidad: ${item.quantity} - Precio: $${price * item.quantity}\n`;
+      const sizesPart =
+        item.sizes && item.sizes.length
+          ? ` - talles: ${item.sizes.join(', ')}`
+          : '';
+      message += `• ${item.product.product_name}${colorPart}- Cantidad: ${
+        item.quantity
+      }${sizesPart} - Total línea: $${price * item.quantity}\n`;
     });
 
     message += `\nTotal: $${targetCart.total}\n\n`;
-    message += `Vendedor: ${targetCart.vendorName}\n`;
-    message += `ID del vendedor: ${targetCart.vendorId}`;
+    message += `Vendedor: ${targetCart.vendorName}`;
 
     // Codificar el mensaje para URL
     const encodedMessage = encodeURIComponent(message);
@@ -467,5 +472,20 @@ export class CartDialogComponent {
       total: targetCart.total,
     });
     window.open(whatsappUrl, '_blank');
+  }
+
+  getMinPurchase(item: CartItem): number {
+    if (item.product?.salesType === 'unidad') {
+      const raw = item.product?.minPurchase;
+      if (typeof raw === 'number' && raw > 0) return raw;
+      if (typeof item.minPurchase === 'number' && item.minPurchase > 0)
+        return item.minPurchase;
+      return 1;
+    }
+    return 1;
+  }
+
+  isDecreaseDisabled(item: CartItem): boolean {
+    return item.quantity <= this.getMinPurchase(item);
   }
 }
