@@ -430,14 +430,18 @@ export class CartDialogComponent {
 
     targetCart.items.forEach((item: CartItem) => {
       const price = item.product.dealPrice || item.product.base_price;
-      message += `• ${item.product.product_name} - Cantidad: ${
+      const colorPart = item.colorName ? ` - color: ${item.colorName} ` : '';
+      const sizesPart =
+        item.sizes && item.sizes.length
+          ? ` - talles: ${item.sizes.join(', ')}`
+          : '';
+      message += `• ${item.product.product_name}${colorPart}- Cantidad: ${
         item.quantity
-      } - Precio: $${price * item.quantity}\n`;
+      }${sizesPart} - Total línea: $${price * item.quantity}\n`;
     });
 
     message += `\nTotal: $${targetCart.total}\n\n`;
-    message += `Vendedor: ${targetCart.vendorName}\n`;
-    message += `ID del vendedor: ${targetCart.vendorId}`;
+    message += `Vendedor: ${targetCart.vendorName}`;
 
     // Codificar el mensaje para URL
     const encodedMessage = encodeURIComponent(message);
@@ -461,11 +465,27 @@ export class CartDialogComponent {
       vendorObject: this.data.vendor,
       items: targetCart.items.map((i) => ({
         product: i.product.product_name,
+        color: i.colorName,
         qty: i.quantity,
         lineaTotal: (i.product.dealPrice || i.product.base_price) * i.quantity,
       })),
       total: targetCart.total,
     });
     window.open(whatsappUrl, '_blank');
+  }
+
+  getMinPurchase(item: CartItem): number {
+    if (item.product?.salesType === 'unidad') {
+      const raw = item.product?.minPurchase;
+      if (typeof raw === 'number' && raw > 0) return raw;
+      if (typeof item.minPurchase === 'number' && item.minPurchase > 0)
+        return item.minPurchase;
+      return 1;
+    }
+    return 1;
+  }
+
+  isDecreaseDisabled(item: CartItem): boolean {
+    return item.quantity <= this.getMinPurchase(item);
   }
 }

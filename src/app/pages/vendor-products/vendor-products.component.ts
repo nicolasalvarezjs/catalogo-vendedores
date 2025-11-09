@@ -14,6 +14,20 @@ import { Product } from '../../models/product.model';
         <h4>{{ p.titulo }}</h4>
         <p *ngIf="p.description">{{ p.description }}</p>
         <span class="price" *ngIf="p.precio">$ {{ p.precio }}</span>
+        <div class="color-chips" *ngIf="p.colors?.length">
+          <div
+            class="color-chip"
+            *ngFor="let c of p.colors"
+            [title]="c.name + ' ' + c.hex"
+          >
+            <span
+              class="swatch"
+              [style.background]="c.hex"
+              [attr.aria-label]="'Color ' + c.name"
+            ></span>
+            <span class="color-name">{{ c.name }}</span>
+          </div>
+        </div>
       </div>
     </div>
     <div class="loading" *ngIf="loading">Cargando...</div>
@@ -39,6 +53,36 @@ import { Product } from '../../models/product.model';
       .price {
         font-weight: 600;
         color: #e65100;
+      }
+      .color-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 8px;
+      }
+      .color-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        background: #f7f7f7;
+        border: 1px solid #e0e0e0;
+        border-radius: 14px;
+        padding: 2px 6px 2px 4px;
+        font-size: 11px;
+        line-height: 1;
+      }
+      .color-chip .swatch {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        border: 1px solid rgba(0, 0, 0, 0.15);
+        box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.6) inset;
+      }
+      .color-chip .color-name {
+        max-width: 70px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
       .loading,
       .end {

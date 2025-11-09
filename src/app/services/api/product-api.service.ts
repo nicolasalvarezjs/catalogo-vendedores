@@ -14,11 +14,16 @@ export interface BackendProduct {
   description?: string;
   tela?: string;
   salesType?: string;
+  minPurchase?: number; // mínimo de compra cuando salesType === 'unidad'
   images?: string[];
   active?: boolean;
   rating?: number;
   categories?: string[];
   date?: string;
+  // Colores disponibles: arreglo de objetos { name, hex }
+  colors?: { name: string; hex: string }[];
+  // Color legado único (productos antiguos)
+  color?: string;
 }
 
 export interface BackendProductPageResponse {
