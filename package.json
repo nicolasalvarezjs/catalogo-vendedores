@@ -3,10 +3,12 @@
   "version": "5.0.0",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve",
-    "build": "ng build",
-    "watch": "ng build --watch --configuration development",
+    "start": "ng serve --port 4200",
     "start:prod": "node index.js",
+    "build": "ng build",
+    "build:staging": "ng build --configuration staging",
+    "build:prod": "ng build --configuration production",
+    "watch": "ng build --watch --configuration development",
     "test": "ng test"
   },
   "private": true,
