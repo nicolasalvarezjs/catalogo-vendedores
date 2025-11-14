@@ -149,6 +149,14 @@
               </div>
             </div>
             }
+            @if(vendor.doesShipping) {
+            <div class="vendor-shipping m-b-12">
+              <div class="d-flex align-items-center gap-4">
+                <i-tabler name="truck" class="icon-20 text-success shipping-icon"></i-tabler>
+                <span class="f-s-13 shipping-text">{{ vendor.shippingDetail || 'Realiza envíos' }}</span>
+              </div>
+            </div>
+            }
 
             <!-- 5. Tipo de venta -->
             @if(vendor.salesType) {

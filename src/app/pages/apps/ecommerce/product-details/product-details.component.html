@@ -113,6 +113,12 @@
         <div class="f-s-14 m-t-4">
           Vendedor: <span class="f-w-600">{{ vendor.name }}</span>
         </div>
+        @if(vendor.doesShipping){
+        <div class="f-s-13 m-t-4 d-flex align-items-center gap-4 shipping-line">
+          <i-tabler name="truck" class="icon-20 text-success shipping-icon"></i-tabler>
+          <span class="shipping-text">{{ vendor.shippingDetail || 'Realiza envíos' }}</span>
+        </div>
+        }
         }
         <div
           class="m-t-4 f-s-14 f-w-500 sales-type-line"
@@ -266,7 +272,7 @@
             Color seleccionado: <strong>{{ selectedColorName }}</strong>
           </div>
         </div>
-        <div class="d-flex align-items-center m-b-30">
+        <div class="d-flex align-items-center m-b-30 m-t-10">
           <label class="f-s-16 f-w-600">Cant:</label>
           <mat-button-toggle-group
             #toggleGroup="matButtonToggleGroup"
@@ -316,12 +322,6 @@
             </div>
           </button>
         </div>
-        <p class="m-t-10">
-          Despachado en 2–3 semanas<br />
-          <a href="#" class="text-primary text-decoration-none f-s-14 f-w-500"
-            >¿Por qué el tiempo de entrega es mayor?</a
-          >
-        </p>
       </div>
     </div>
   </mat-card>
@@ -340,9 +340,12 @@
         <div class="m-t-20">
           <p class="f-s-14 f-w-400 m-0" style="white-space: pre-line">
             {{
-              product?.description ||
+              (product?.description ||
                 product?.desc ||
-                "Descripción no disponible."
+                "Descripción no disponible.") +
+                (vendor?.productDescription
+                  ? "\n" + vendor?.productDescription
+                  : "")
             }}
           </p>
         </div>

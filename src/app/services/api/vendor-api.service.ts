@@ -16,6 +16,10 @@ export interface BackendVendor {
   salesType?: string;
   socials?: Record<string, string>;
   startSell?: boolean;
+  // Nuevos campos backend
+  doesShipping?: boolean;
+  shippingDetail?: string;
+  productDescription?: string;
 }
 
 export interface BackendVendorPageResponse {
