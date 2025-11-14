@@ -23,6 +23,10 @@ import {
   ProductApiService,
   BackendProduct,
 } from 'src/app/services/api/product-api.service';
+import {
+  CategoryApiService,
+  BackendCategory,
+} from 'src/app/services/api/category-api.service';
 import { CartService } from 'src/app/services/apps/cart/cart.service';
 import { ConfirmDialogComponent } from '../product-details/confirm-dialog.component';
 import { CartDialogComponent } from './cart-dialog.component';
@@ -129,31 +133,27 @@ interface VendorProductsDialogData {
           >
             <div class="p-16">
               <h5 class="m-0 p-t-16 p-x-32 f-s-14 f-w-600">
-                Filtrar por categoría
+                Filtrar por categorías
               </h5>
               <div class="p-16">
-                <mat-nav-list>
-                  @for(folder of folders; track folder){
-                  <mat-list-item
-                    role="listitem"
-                    class="m-b-2 gap-10 active-primary"
-                    [ngClass]="{
-                      'bg-primary': selectedCategory === folder.name
-                    }"
-                    (click)="getCategory(folder.name)"
+                <mat-form-field appearance="outline" class="w-100">
+                  <mat-label>Categorías</mat-label>
+                  <mat-select
+                    multiple
+                    [(ngModel)]="selectedCategories"
+                    (ngModelChange)="onCategoriesChange($event)"
+                    placeholder="Todas"
                   >
-                    <span matListItemIcon class="m-r-0"
-                      ><i-tabler
-                        name="{{ folder.icon }}"
-                        class="icon-18"
-                      ></i-tabler
-                    ></span>
-                    <span matListItemTitle class="f-w-400 f-s-14">{{
-                      folder.name | titlecase
-                    }}</span>
-                  </mat-list-item>
-                  }
-                </mat-nav-list>
+                    @for(cat of categories; track cat.id){
+                    <mat-option [value]="cat.name">{{
+                      cat.name | titlecase
+                    }}</mat-option>
+                    }
+                  </mat-select>
+                  <mat-hint *ngIf="selectedCategories.length === 0"
+                    >Mostrando todas las categorías</mat-hint
+                  >
+                </mat-form-field>
               </div>
               <h5 class="m-0 p-t-16 p-x-32 f-s-14 f-w-600 b-t-1">
                 Ordenar por
@@ -188,19 +188,6 @@ interface VendorProductsDialogData {
                     class="custom-radio"
                     [value]="price.value"
                     (click)="getGender(price.value)"
-                    >{{ price.label | titlecase }}</mat-radio-button
-                  >
-                  }
-                </mat-radio-group>
-              </div>
-              <h5 class="m-0 p-t-16 p-x-32 f-s-14 f-w-600 b-t-1">Por precio</h5>
-              <div class="p-16 pricing-section">
-                <mat-radio-group [(ngModel)]="selectedPrice" class="m-b-20">
-                  @for (price of priceOptions; track price.value) {
-                  <mat-radio-button
-                    class="custom-radio"
-                    [value]="price.value"
-                    (click)="getPricing(price.value)"
                     >{{ price.label | titlecase }}</mat-radio-button
                   >
                   }
@@ -688,21 +675,14 @@ export class VendorProductsDialogComponent implements OnInit {
   filteredCards: any[] = [];
   loading = false;
 
-  folders: Section[] = [
-    { name: 'todos', icon: 'users' },
-    { name: 'denim', icon: 'hanger' },
-    { name: 'camisas', icon: 'shirt' },
-    { name: 'deportivo', icon: 'mood-smile' },
-    { name: 'hombre', icon: 'user' },
-    { name: 'mujer', icon: 'user' },
-  ];
-  selectedCategory: string = this.folders[0].name;
+  // Categorías dinámicas obtenidas del backend
+  categories: BackendCategory[] = [];
+  selectedCategories: string[] = []; // vacío => todas
 
   notes: Section[] = [
     { name: 'más nuevo', icon: 'calendar' },
     { name: 'precio alto-bajo', icon: 'sort-descending' },
     { name: 'precio bajo-alto', icon: 'sort-ascending' },
-    { name: 'con descuento', icon: 'percentage' },
   ];
   selectedSortBy: string = this.notes[0].name;
 
@@ -710,18 +690,13 @@ export class VendorProductsDialogComponent implements OnInit {
   selectedGender: string = 'todos';
   genderOptions = [
     { label: 'Todos', value: 'todos' },
-    { label: 'Hombre', value: 'hombre' },
     { label: 'Mujer', value: 'mujer' },
-    { label: 'Niños', value: 'niños' },
+    { label: 'Hombre', value: 'hombre' },
+    { label: 'Niño', value: 'niño' },
+    { label: 'Niña', value: 'niña' },
+    { label: 'Unisex', value: 'unisex' },
   ];
-  selectedPrice: string = 'todos';
-  priceOptions = [
-    { label: 'Todos', value: 'todos' },
-    { label: '0 – 50', value: '0-50' },
-    { label: '50 – 100', value: '50-100' },
-    { label: '100 – 200', value: '100-200' },
-    { label: 'Más de 200', value: 'over-200' },
-  ];
+  // Eliminado filtro de precio (requerimiento)
 
   mobileSidenavWidth = 300;
 
@@ -730,10 +705,12 @@ export class VendorProductsDialogComponent implements OnInit {
     private dialogRef: MatDialogRef<VendorProductsDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: VendorProductsDialogData,
     private productApi: ProductApiService,
+    private categoryApi: CategoryApiService,
     private cartService: CartService
   ) {}
 
   ngOnInit(): void {
+    this.loadCategories();
     this.loadProducts();
   }
 
@@ -777,6 +754,9 @@ export class VendorProductsDialogComponent implements OnInit {
         page: this.backendPage,
         limit: this.backendLimit,
         vendorId: this.data.vendor.id,
+        categories: this.selectedCategories.length
+          ? this.selectedCategories
+          : undefined,
       })
       .subscribe({
         next: (res) => {
@@ -784,14 +764,6 @@ export class VendorProductsDialogComponent implements OnInit {
           this.allProducts.push(...mapped);
           this.filteredCards = [...this.allProducts];
           this.backendTotalPages = res.totalPages;
-          if (mapped.length) {
-            console.log('[LOAD PRODUCTS] Debug colores primer producto:', {
-              rawColors: res.products[0].colors,
-              rawColor: (res.products[0] as any).color,
-              mappedColors: mapped[0].colors,
-              mappedColor: mapped[0].color,
-            });
-          }
           if (res.page >= res.totalPages) {
             this.allLoaded = true;
           } else {
@@ -812,15 +784,10 @@ export class VendorProductsDialogComponent implements OnInit {
     );
   }
 
-  getCategory(name: string): void {
-    this.selectedCategory = name;
-    if (name.toLowerCase() === 'todos') {
-      this.filteredCards = [...this.allProducts];
-    } else {
-      this.filteredCards = this.allProducts.filter(
-        (card) => card.categoria?.toLowerCase() === name.toLowerCase()
-      );
-    }
+  // Cambio manual desde template multi-select
+  onCategoriesChange(values: string[]) {
+    this.selectedCategories = values || [];
+    this.resetAndReloadProducts();
   }
 
   getSorted(name: string): void {
@@ -842,13 +809,6 @@ export class VendorProductsDialogComponent implements OnInit {
           (a, b) => +a.base_price - +b.base_price
         );
         break;
-      case 'con descuento':
-        this.filteredCards = [...this.allProducts].sort((a, b) => {
-          const discountA = +a.base_price - +a.dealPrice;
-          const discountB = +b.base_price - +b.dealPrice;
-          return discountB - discountA;
-        });
-        break;
       default:
         this.filteredCards = [...this.allProducts];
     }
@@ -865,43 +825,14 @@ export class VendorProductsDialogComponent implements OnInit {
     }
   }
 
-  getPricing(priceRange: string): void {
-    this.selectedPrice = priceRange;
-    switch (priceRange) {
-      case '0-50':
-        this.filteredCards = this.allProducts.filter(
-          (card) => +card.base_price >= 0 && +card.base_price <= 50
-        );
-        break;
-      case '50-100':
-        this.filteredCards = this.allProducts.filter(
-          (card) => +card.base_price > 50 && +card.base_price <= 100
-        );
-        break;
-      case '100-200':
-        this.filteredCards = this.allProducts.filter(
-          (card) => +card.base_price > 100 && +card.base_price <= 200
-        );
-        break;
-      case 'over-200':
-        this.filteredCards = this.allProducts.filter(
-          (card) => +card.base_price > 200
-        );
-        break;
-      case 'todos':
-      default:
-        this.filteredCards = [...this.allProducts];
-        break;
-    }
-  }
+  // Filtro de precio removido
 
   getRestFilter() {
-    this.selectedCategory = this.folders[0].name;
+    this.selectedCategories = [];
     this.selectedSortBy = this.notes[0].name;
-    this.filteredCards = [...this.allProducts];
     this.searchText = '';
     this.selectedGender = 'todos';
-    this.selectedPrice = 'todos';
+    this.resetAndReloadProducts();
   }
 
   getProductList() {
@@ -1031,5 +962,25 @@ export class VendorProductsDialogComponent implements OnInit {
 
   close() {
     this.dialogRef.close();
+  }
+
+  private loadCategories() {
+    this.categoryApi.getCategories().subscribe({
+      next: (cats) => {
+        this.categories = cats;
+      },
+      error: (err) => {
+        console.error('Error cargando categorías', err);
+        this.categories = [];
+      },
+    });
+  }
+  private resetAndReloadProducts() {
+    this.backendPage = 1;
+    this.backendTotalPages = 0;
+    this.allLoaded = false;
+    this.allProducts = [];
+    this.filteredCards = [];
+    this.loadProducts();
   }
 }

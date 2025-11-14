@@ -43,6 +43,7 @@ export class ProductApiService {
     page?: number;
     limit?: number;
     vendorId?: string;
+    categories?: string[]; // filtro multi-categoría
   }): Observable<BackendProductPageResponse> {
     return this.http.get<BackendProductPageResponse>(
       `${this.baseUrl}${buildQuery(params)}`

@@ -131,6 +131,10 @@ export class ShopComponent implements OnInit, AfterViewChecked {
       salesType: b.salesType,
       startSell: b.startSell,
       userId: b.userId,
+      // Campos nuevos
+      doesShipping: b.doesShipping,
+      shippingDetail: b.shippingDetail,
+      productDescription: b.productDescription,
     } as Vendor;
   }
 
