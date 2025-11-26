@@ -816,13 +816,27 @@ export class VendorProductsDialogComponent implements OnInit {
 
   getGender(gender: string): void {
     this.selectedGender = gender;
-    if (gender.toLowerCase() === 'todos') {
+    const normalized = (gender || '').toString().toLowerCase();
+    if (normalized === 'todos') {
       this.filteredCards = [...this.allProducts];
-    } else {
-      this.filteredCards = this.allProducts.filter((card) =>
-        card.generos?.includes(gender.toLowerCase())
-      );
+      return;
     }
+
+    this.filteredCards = this.allProducts.filter((card) => {
+      // Prefer the new `generos` array (case-insensitive match)
+      if (Array.isArray(card.generos) && card.generos.length) {
+        return card.generos.some((g: any) =>
+          (g || '').toString().toLowerCase() === normalized
+        );
+      }
+
+      // Fallback to legacy single `gender` property
+      if (card.gender) {
+        return card.gender.toString().toLowerCase() === normalized;
+      }
+
+      return false;
+    });
   }
 
   // Filtro de precio removido
