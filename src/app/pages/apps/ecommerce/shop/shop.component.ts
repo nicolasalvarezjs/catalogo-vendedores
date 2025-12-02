@@ -187,20 +187,12 @@ export class ShopComponent implements OnInit, AfterViewChecked {
         imgUrl,
         altText: `Imagen ${index + 1} de ${vendor.name}`,
       }));
-    } else if (vendor.logoPath) {
-      return [
-        {
-          id: `${vendor.id}-logo`,
-          imgUrl: vendor.logoPath,
-          altText: `Logo de ${vendor.name}`,
-        },
-      ];
     } else {
       return [
         {
-          id: `${vendor.id}-placeholder`,
-          imgUrl: 'assets/images/placeholder.jpg',
-          altText: `Imagen de ${vendor.name}`,
+          id: `${vendor.id}-no-image`,
+          imgUrl: 'assets/images/products/no-image.png',
+          altText: `Imagen no disponible para ${vendor.name}`,
         },
       ];
     }
