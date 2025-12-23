@@ -84,7 +84,7 @@
             <img
               [src]="slide.imgUrl"
               [alt]="slide.altText"
-              class="rounded w-100"
+              class="rounded w-100 product-media-img"
               loading="lazy"
               decoding="async"
               (error)="slide.imgUrl = 'assets/images/products/no-image.png'"
@@ -96,14 +96,16 @@
           }
         </owl-carousel-o>
         }@else {
-        <img
-          [src]="product?.imagePath || 'assets/images/products/no-image.png'"
-          alt="producto"
-          class="rounded w-100"
-          loading="lazy"
-          decoding="async"
-          (error)="onImgError($event)"
-        />
+        <div class="product-media-single">
+          <img
+            [src]="product?.imagePath || 'assets/images/products/no-image.png'"
+            alt="producto"
+            class="rounded w-100 product-media-img"
+            loading="lazy"
+            decoding="async"
+            (error)="onImgError($event)"
+          />
+        </div>
         }
       </div>
       <div class="col-lg-4">
