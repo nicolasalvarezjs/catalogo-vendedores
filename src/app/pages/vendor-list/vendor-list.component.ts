@@ -8,16 +8,18 @@ import { Vendor } from '../../models/vendor.model';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="vendor-list" *ngIf="vendors.length">
-      <div
-        class="vendor-card"
-        *ngFor="let v of vendors"
-        (click)="selectVendor(v)"
-      >
-        <img *ngIf="v.logoPath" [src]="v.logoPath" alt="{{ v.name }}" />
-        <h3>{{ v.name }}</h3>
-        <p *ngIf="v.description">{{ v.description }}</p>
-        <small>Rating: {{ v.rating || 0 }}</small>
+    <div class="vendor-list-shell" *ngIf="vendors.length">
+      <div class="vendor-list">
+        <div
+          class="vendor-card"
+          *ngFor="let v of vendors"
+          (click)="selectVendor(v)"
+        >
+          <img *ngIf="v.logoPath" [src]="v.logoPath" alt="{{ v.name }}" />
+          <h3>{{ v.name }}</h3>
+          <p *ngIf="v.description">{{ v.description }}</p>
+          <small>Rating: {{ v.rating || 0 }}</small>
+        </div>
       </div>
     </div>
     <div class="loading" *ngIf="loading">Cargando...</div>
@@ -25,6 +27,14 @@ import { Vendor } from '../../models/vendor.model';
   `,
   styles: [
     `
+      .vendor-list-shell {
+        width: 100%;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+        box-sizing: border-box;
+      }
       .vendor-list {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -51,6 +61,18 @@ import { Vendor } from '../../models/vendor.model';
       .end {
         text-align: center;
         padding: 1rem;
+      }
+      @media (min-width: 768px) {
+        .vendor-list-shell {
+          padding-left: 3rem;
+          padding-right: 3rem;
+        }
+      }
+      @media (min-width: 992px) {
+        .vendor-list-shell {
+          padding-left: 4rem;
+          padding-right: 4rem;
+        }
       }
     `,
   ],

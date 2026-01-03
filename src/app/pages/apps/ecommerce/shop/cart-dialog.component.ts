@@ -5,8 +5,8 @@ import { IconModule } from 'src/app/icon/icon.module';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import {
   CartService,
-  VendorCart,
   CartItem,
+  CartState,
 } from 'src/app/services/apps/cart/cart.service';
 import { MonedaArsPipe } from 'src/app/pipe/moneda-ars.pipe';
 
@@ -23,118 +23,16 @@ interface CartDialogData {
   template: `
     <div class="cart-dialog-fullscreen">
       <div class="dialog-header">
-        <h2 class="dialog-title">
-          {{
-            data.mode === 'general'
-              ? 'Carrito de Compras'
-              : 'Carrito del Vendedor'
-          }}
-        </h2>
+        <h2 class="dialog-title">Carrito de Compras</h2>
         <button mat-icon-button (click)="close()" aria-label="Cerrar">
           <mat-icon>close</mat-icon>
         </button>
       </div>
 
       <div class="cart-content">
-        @if(data.mode === 'general'){ @if(carts.length > 0){
-        <div class="expansion-panels-container">
-          @for(cart of carts; track cart.vendorId) {
-          <mat-expansion-panel class="vendor-expansion-panel">
-            <mat-expansion-panel-header>
-              <mat-panel-title>{{ cart.vendorName }}</mat-panel-title>
-              <mat-panel-description
-                >{{ cart.items.length }} productos -
-                {{ cart.total | monedaARS }}</mat-panel-description
-              >
-            </mat-expansion-panel-header>
-            <div class="cart-items">
-              @for(item of cart.items; track item.product.id) {
-              <div class="cart-item">
-                <div class="item-top-row">
-                  <img
-                    [src]="item.product.imagePath"
-                    alt="product"
-                    class="item-image"
-                  />
-                  <div class="item-details">
-                    <h4>{{ item.product.product_name }}</h4>
-                    <p>
-                      {{ item.product.base_price | monedaARS }} x
-                      {{ item.quantity }}
-                    </p>
-                    <p class="item-subtotal">
-                      <strong
-                        >Subtotal:
-                        {{
-                          item.product.base_price * item.quantity | monedaARS
-                        }}</strong
-                      >
-                    </p>
-                  </div>
-                </div>
-                <div class="quantity-controls">
-                  <button
-                    mat-icon-button
-                    (click)="
-                      updateQuantity(
-                        item.product.id,
-                        cart.vendorId,
-                        item.quantity - 1
-                      )
-                    "
-                  >
-                    <mat-icon>remove</mat-icon>
-                  </button>
-                  <span>{{ item.quantity }}</span>
-                  <button
-                    mat-icon-button
-                    (click)="
-                      updateQuantity(
-                        item.product.id,
-                        cart.vendorId,
-                        item.quantity + 1
-                      )
-                    "
-                  >
-                    <mat-icon>add</mat-icon>
-                  </button>
-                  <button
-                    mat-icon-button
-                    color="warn"
-                    (click)="removeItem(item.product.id, cart.vendorId)"
-                  >
-                    <mat-icon>delete</mat-icon>
-                  </button>
-                </div>
-              </div>
-              }
-            </div>
-            <div class="cart-summary">
-              <div class="cart-total">
-                <strong>Total: {{ cart.total | monedaARS }}</strong>
-              </div>
-              <button
-                mat-flat-button
-                color="primary"
-                class="checkout-btn"
-                (click)="checkoutViaWhatsApp(cart)"
-              >
-                <mat-icon>whatsapp</mat-icon>
-                <span>Finalizar compra</span>
-              </button>
-            </div>
-          </mat-expansion-panel>
-          }
-        </div>
-        } @else {
-        <div class="empty-cart">
-          <mat-icon class="empty-icon">shopping_cart</mat-icon>
-          <h3>Carrito vacío</h3>
-          <p>No hay productos en el carrito</p>
-        </div>
-        } } @else { @if(selectedCart && selectedCart.items.length > 0){
+        @if(cart.items.length){
         <div class="cart-items">
-          @for(item of selectedCart.items; track item.product.id) {
+          @for(item of cart.items; track item.product.id) {
           <div class="cart-item">
             <div class="item-top-row">
               <img
@@ -144,6 +42,9 @@ interface CartDialogData {
               />
               <div class="item-details">
                 <h4>{{ item.product.product_name }}</h4>
+                @if(item.vendorName){
+                <p class="vendor-line">Vendedor: {{ item.vendorName }}</p>
+                }
                 <p>
                   {{ item.product.base_price | monedaARS }} x
                   {{ item.quantity }}
@@ -151,8 +52,7 @@ interface CartDialogData {
                 <p class="item-subtotal">
                   <strong
                     >Subtotal:
-                    {{
-                      item.product.base_price * item.quantity | monedaARS
+                    {{ item.product.base_price * item.quantity | monedaARS
                     }}</strong
                   >
                 </p>
@@ -161,33 +61,21 @@ interface CartDialogData {
             <div class="quantity-controls">
               <button
                 mat-icon-button
-                (click)="
-                  updateQuantity(
-                    item.product.id,
-                    selectedCart.vendorId,
-                    item.quantity - 1
-                  )
-                "
+                (click)="updateQuantity(item.product.id, item.quantity - 1)"
               >
                 <mat-icon>remove</mat-icon>
               </button>
               <span>{{ item.quantity }}</span>
               <button
                 mat-icon-button
-                (click)="
-                  updateQuantity(
-                    item.product.id,
-                    selectedCart.vendorId,
-                    item.quantity + 1
-                  )
-                "
+                (click)="updateQuantity(item.product.id, item.quantity + 1)"
               >
                 <mat-icon>add</mat-icon>
               </button>
               <button
                 mat-icon-button
                 color="warn"
-                (click)="removeItem(item.product.id, selectedCart.vendorId)"
+                (click)="removeItem(item.product.id)"
               >
                 <mat-icon>delete</mat-icon>
               </button>
@@ -197,7 +85,7 @@ interface CartDialogData {
         </div>
         <div class="cart-summary">
           <div class="cart-total">
-            <strong>Total: {{ selectedCart.total | monedaARS }}</strong>
+            <strong>Total: {{ cart.total | monedaARS }}</strong>
           </div>
           <button
             mat-flat-button
@@ -213,9 +101,9 @@ interface CartDialogData {
         <div class="empty-cart">
           <mat-icon class="empty-icon">shopping_cart</mat-icon>
           <h3>Carrito vacío</h3>
-          <p>No hay productos en el carrito de este vendedor</p>
+          <p>No hay productos en el carrito</p>
         </div>
-        } }
+        }
       </div>
     </div>
   `,
@@ -386,8 +274,7 @@ interface CartDialogData {
   ],
 })
 export class CartDialogComponent {
-  carts: VendorCart[] = [];
-  selectedCart: VendorCart | null = null;
+  cart: CartState = { items: [], total: 0 };
 
   constructor(
     private cartService: CartService,
@@ -395,30 +282,25 @@ export class CartDialogComponent {
     @Inject(MAT_DIALOG_DATA) public data: CartDialogData
   ) {
     console.log('CartDialogComponent opened with data:', data);
-    this.cartService.carts$.subscribe((carts) => {
-      this.carts = carts;
-      if (data.mode === 'vendor' && data.vendorId) {
-        this.selectedCart =
-          carts.find((cart) => cart.vendorId === data.vendorId) || null;
-        console.log('Selected vendor cart:', this.selectedCart);
-      }
+    this.cartService.cart$.subscribe((cart) => {
+      this.cart = cart;
     });
   }
 
-  updateQuantity(productId: number, vendorId: string, quantity: number): void {
-    this.cartService.updateQuantity(productId, vendorId, quantity);
+  updateQuantity(productId: number, quantity: number): void {
+    this.cartService.updateQuantity(productId, '', quantity);
   }
 
-  removeItem(productId: number, vendorId: string): void {
-    this.cartService.removeFromCart(productId, vendorId);
+  removeItem(productId: number): void {
+    this.cartService.removeFromCart(productId);
   }
 
   close(): void {
     this.dialogRef.close();
   }
 
-  checkoutViaWhatsApp(cart?: VendorCart): void {
-    const targetCart = cart || this.selectedCart;
+  checkoutViaWhatsApp(): void {
+    const targetCart = this.cart;
     if (!targetCart || targetCart.items.length === 0) {
       console.log('No hay productos en el carrito para hacer checkout');
       return;
@@ -426,7 +308,7 @@ export class CartDialogComponent {
 
     console.log('Haciendo checkout por WhatsApp con carrito:', targetCart);
 
-    let message = `Hola, quiero finalizar mi compra con ${targetCart.vendorName}:\n\n`;
+    let message = `Hola, quiero finalizar mi compra:\n\n`;
 
     targetCart.items.forEach((item: CartItem) => {
       const price = item.product.dealPrice || item.product.base_price;
@@ -435,13 +317,17 @@ export class CartDialogComponent {
         item.sizes && item.sizes.length
           ? ` - talles: ${item.sizes.join(', ')}`
           : '';
-      message += `• ${item.product.product_name}${colorPart}- Cantidad: ${
+      const vendorPart = item.vendorName ? ` (Vendedor: ${item.vendorName})` : '';
+      message += `• ${item.product.product_name}${vendorPart}${colorPart}- Cantidad: ${
         item.quantity
       }${sizesPart} - Total línea: $${price * item.quantity}\n`;
     });
 
     message += `\nTotal: $${targetCart.total}\n\n`;
-    message += `Vendedor: ${targetCart.vendorName}`;
+
+    if (this.data.vendor?.name) {
+      message += `Vendedor de referencia: ${this.data.vendor?.name}`;
+    }
 
     // Codificar el mensaje para URL
     const encodedMessage = encodeURIComponent(message);

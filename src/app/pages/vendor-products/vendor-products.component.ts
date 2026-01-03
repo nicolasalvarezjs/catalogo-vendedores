@@ -11,6 +11,13 @@ import { Product } from '../../models/product.model';
     <h2 *ngIf="vendorName">Productos de {{ vendorName }}</h2>
     <div class="products-grid" *ngIf="products.length">
       <div class="product-card" *ngFor="let p of products">
+        <div class="image-wrapper">
+          <img
+            [src]="p.images?.[0] || 'assets/images/products/no-image.png'"
+            [alt]="p.titulo || 'Producto'"
+            loading="lazy"
+          />
+        </div>
         <h4>{{ p.titulo }}</h4>
         <p *ngIf="p.description">{{ p.description }}</p>
         <span class="price" *ngIf="p.precio">$ {{ p.precio }}</span>
@@ -45,6 +52,24 @@ import { Product } from '../../models/product.model';
         padding: 0.75rem;
         border-radius: 8px;
         background: #fff;
+      }
+      .product-card .image-wrapper {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        border-radius: 6px;
+        margin-bottom: 0.75rem;
+        background: #ffffff;
+        border: 1px solid #f0f0f0;
+        padding: 0.5rem;
+      }
+      .product-card .image-wrapper img {
+        max-width: 100%;
+        height: auto;
+        object-fit: contain;
+        object-position: center;
+        background: #ffffff;
       }
       .product-card h4 {
         margin: 0 0 0.5rem;

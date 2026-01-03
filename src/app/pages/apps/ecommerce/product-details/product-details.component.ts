@@ -25,6 +25,8 @@ import {
 import { Vendor } from '../ecommerceData';
 import { CartService } from 'src/app/services/apps/cart/cart.service';
 import { ConfirmDialogComponent } from './confirm-dialog.component';
+import { ProductApiService } from 'src/app/services/api/product-api.service';
+import { Product } from 'src/app/models/product.model';
 
 interface Slide {
   id: string;
@@ -32,6 +34,15 @@ interface Slide {
   altText: string;
   title?: string;
 }
+
+type DetailVendor = Vendor & {
+  id?: string;
+  logoPath?: string;
+  doesShipping?: boolean;
+  shippingDetail?: string;
+  productDescription?: string;
+  socials?: any;
+};
 
 @Component({
   selector: 'app-product-details',
@@ -94,8 +105,10 @@ export class ProductDetailsComponent implements AfterViewInit {
   // Slides dinámicos construidos desde product.images (solo ropa 1-4.jpg)
   slides: Slide[] = [];
   activeIndex = 0;
-  vendor: Vendor | undefined;
+  vendor: DetailVendor | undefined;
   vendorProducts: any[] = [];
+  private currentProductId: string | null = null;
+  private productHistory: string[] = [];
   // TODO(Revisar futuro): distribución de ratings para pestaña de reseñas
   // ratings = [ { label: 1, value: 30, count: 485 }, { label: 2, value: 20, count: 215 }, { label: 3, value: 10, count: 110 }, { label: 4, value: 60, count: 620 }, { label: 5, value: 15, count: 160 } ];
 
@@ -107,6 +120,7 @@ export class ProductDetailsComponent implements AfterViewInit {
   constructor(
     private router: Router,
     private route: ActivatedRoute,
+    private productApi: ProductApiService,
     @Optional()
     @Inject(MAT_DIALOG_DATA)
     private dialogData: { product?: any; vendor?: Vendor } | null,
@@ -115,6 +129,7 @@ export class ProductDetailsComponent implements AfterViewInit {
     if (this.dialogData?.product) {
       // Modal con producto ya cargado
       this.product = this.dialogData.product;
+      this.currentProductId = this.dialogData.product?.id || this.dialogData.product?._id || null;
       console.log('[DETAILS INIT] Producto recibido en dialog:', {
         id: this.product?._id,
         name: this.product?.product_name,
@@ -132,9 +147,19 @@ export class ProductDetailsComponent implements AfterViewInit {
       // Ajustar cantidad inicial según minPurchase
       this.quantity = Math.max(this.quantity, this.minPurchase);
       this.initSizes();
+      // Cargar otros productos del mismo vendedor al abrir como modal
+      const relatedVendorId =
+        this.vendor?.id ||
+        (typeof this.product?.vendorId === 'string'
+          ? this.product.vendorId
+          : undefined);
+      if (relatedVendorId) {
+        this.fetchVendorProducts(relatedVendorId, this.product?.id);
+      }
+      this.scrollToTop();
       this.loading = false;
     } else {
-      // Página normal: esperar id en ruta y producto precargado no disponible.
+      // Página normal: cargar por id desde backend
       this.route.paramMap.subscribe((params) => {
         const idParam = params.get('id');
         if (!idParam) {
@@ -142,10 +167,7 @@ export class ProductDetailsComponent implements AfterViewInit {
           this.loading = false;
           return;
         }
-        // En versión backend real aquí se haría llamada GET /product/{id} (endpoint futuro)
-        // Por ahora marcamos loading false y fallback.
-        this.product = null;
-        this.loading = false;
+        this.fetchProduct(idParam);
       });
     }
   }
@@ -183,7 +205,16 @@ export class ProductDetailsComponent implements AfterViewInit {
   getBack() {
     // Si está en modal, cerrar; si no, navegar atrás
     if (this.dialogRef) {
+      if (this.productHistory.length) {
+        const prevId = this.productHistory.pop();
+        if (prevId) {
+          this.router.navigate(['product', prevId]);
+          this.fetchProduct(prevId);
+          return;
+        }
+      }
       this.dialogRef.close();
+      this.router.navigate(['']);
     } else {
       this.router.navigate(['']);
     }
@@ -195,16 +226,18 @@ export class ProductDetailsComponent implements AfterViewInit {
     this.toggleValue = null;
   }
   viewVendorProduct(p: any) {
+    const targetId = p._id || p.id;
+    // Guardar historial para volver atrás dentro del modal
+    if (this.currentProductId) {
+      this.productHistory.push(this.currentProductId);
+    }
+    // Navegamos para mantener la URL compartible aunque sigamos en modal
+    this.router.navigate(['product', targetId]);
+
     if (this.dialogRef) {
       this.loading = true;
-      this.product = p;
-      this.buildSlides(p);
-      this.extractColors(p);
-      this.quantity = Math.max(1, this.minPurchase);
-      this.initSizes();
-      this.loading = false;
-    } else {
-      this.router.navigate(['product', p._id || p.id]);
+      this.vendorProducts = [];
+      this.fetchProduct(targetId);
     }
   }
 
@@ -398,6 +431,103 @@ export class ProductDetailsComponent implements AfterViewInit {
       this.selectedSizes = [];
       this.sizesAvailable = [];
     }
+  }
+
+  private fetchProduct(id: string) {
+    this.loading = true;
+    this.productApi.getProductById(id).subscribe({
+      next: (p) => {
+        const mapped = this.mapBackendProduct(p);
+        this.currentProductId = mapped.id || mapped._id || id;
+        this.product = mapped;
+        this.vendor = mapped.vendorMeta;
+        this.buildSlides(mapped);
+        this.extractColors(mapped);
+        this.quantity = Math.max(this.quantity, this.minPurchase);
+        this.initSizes();
+        const relatedVendorId =
+          mapped.vendorMeta?.id ||
+          (typeof mapped.vendorId === 'string' ? mapped.vendorId : undefined);
+        if (relatedVendorId) {
+          this.fetchVendorProducts(relatedVendorId, mapped.id);
+        }
+        this.scrollToTop();
+        this.loading = false;
+      },
+      error: (err) => {
+        console.error('Error fetching product', err);
+        this.loading = false;
+      },
+    });
+  }
+
+  private mapBackendProduct(
+    p: any
+  ): Product & { id?: string; vendorMeta?: DetailVendor } {
+    const vendorObj = typeof p.vendorId === 'object' ? p.vendorId : undefined;
+    const vendorId = typeof p.vendorId === 'string' ? p.vendorId : vendorObj?._id;
+    return {
+      ...p,
+      id: p._id || p.id,
+      product_name: p.product_name || p.titulo,
+      base_price: p.base_price || p.precio,
+      imagePath:
+        p.images && p.images.length > 0
+          ? p.images[0]
+          : 'assets/images/products/no-image.png',
+      vendorMeta: vendorObj
+        ? {
+            id: vendorId,
+            name: vendorObj.name,
+            logoPath: (vendorObj as any).logoPath,
+            doesShipping: (vendorObj as any).doesShipping,
+            shippingDetail: (vendorObj as any).shippingDetail,
+            productDescription: (vendorObj as any).productDescription,
+            socials: (vendorObj as any).socials,
+          }
+        : undefined,
+    } as Product & { id?: string; vendorMeta?: DetailVendor };
+  }
+
+  private fetchVendorProducts(vendorId: string, excludeId?: string) {
+    this.productApi
+      .getProducts({ page: 1, limit: 8, vendorId })
+      .subscribe({
+        next: (res) => {
+          const mapped = res.products
+            .map((p) => this.mapBackendProduct(p))
+            .filter((p: any) => (p.id || p._id) !== excludeId);
+          this.vendorProducts = mapped;
+        },
+        error: (err) => console.error('Error loading vendor products', err),
+      });
+  }
+
+  private scrollToTop() {
+    if (typeof window === 'undefined') return;
+    setTimeout(() => {
+      // Scroll de la ventana (para modo página)
+      window.scrollTo({ top: 0, behavior: 'auto' });
+
+      // Scroll del contenedor del diálogo (modo modal a pantalla completa)
+      try {
+        const dialogSurface = document.querySelector(
+          '.product-details-dialog .mat-mdc-dialog-surface'
+        ) as HTMLElement | null;
+        if (dialogSurface) {
+          dialogSurface.scrollTop = 0;
+        }
+
+        const dialogContent = document.querySelector(
+          '.product-details-dialog .details-wrapper'
+        ) as HTMLElement | null;
+        if (dialogContent) {
+          dialogContent.scrollTop = 0;
+        }
+      } catch (e) {
+        console.warn('[scrollToTop] no se pudo scrollear el diálogo', e);
+      }
+    }, 0);
   }
 
   toggleSize(size: string) {

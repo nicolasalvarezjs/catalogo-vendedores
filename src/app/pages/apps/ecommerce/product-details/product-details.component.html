@@ -112,8 +112,18 @@
         <!-- Chips de estado y categoría removidos temporalmente -->
         <h3 class="m-t-10 f-w-600">{{ product?.product_name }}</h3>
         @if(vendor){
-        <div class="f-s-14 m-t-4">
-          Vendedor: <span class="f-w-600">{{ vendor.name }}</span>
+        <div class="vendor-line d-flex align-items-center gap-8 m-t-4">
+          @if(vendor.logoPath){
+          <img
+            [src]="vendor.logoPath"
+            [alt]="'Logo ' + vendor.name"
+            class="vendor-logo"
+            loading="lazy"
+          />
+          }
+          <div class="f-s-14">
+            Vendedor: <span class="f-w-600">{{ vendor.name }}</span>
+          </div>
         </div>
         @if(vendor.doesShipping){
         <div class="f-s-13 m-t-4 d-flex align-items-center gap-4 shipping-line">
@@ -397,4 +407,35 @@
     -->
     </mat-tab-group>
   </mat-card>
+
+  @if(vendorProducts.length){
+  <mat-card class="cardWithShadow b-1 rounded p-30 details-card m-t-20">
+    <div class="d-flex align-items-center justify-content-between m-b-12">
+      <h4 class="m-0">Más productos del vendedor</h4>
+    </div>
+    <div class="related-scroll" role="list">
+      @for(p of vendorProducts; track p.id){
+      <div class="related-card" role="listitem">
+        <mat-card
+          class="cardWithShadow productcard overflow-hidden b-1 cursor-pointer"
+          (click)="viewVendorProduct(p)"
+        >
+          <div class="thumb">
+            <img
+              [src]="p.imagePath"
+              alt="Producto"
+              loading="lazy"
+              (error)="onImgError($event)"
+            />
+          </div>
+          <mat-card-content class="p-10">
+            <div class="name text-ellipsis">{{ p.product_name }}</div>
+            <div class="price f-w-600 text-primary">{{ p.base_price | monedaARS }}</div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+      }
+    </div>
+  </mat-card>
+  }
 </div>

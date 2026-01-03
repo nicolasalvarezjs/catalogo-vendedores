@@ -34,6 +34,8 @@ export interface BackendProductPageResponse {
   totalPages: number;
 }
 
+export interface BackendProductSingleResponse extends BackendProduct {}
+
 @Injectable({ providedIn: 'root' })
 export class ProductApiService {
   private baseUrl = `${API_BASE_URL}/product`;
@@ -48,5 +50,9 @@ export class ProductApiService {
     return this.http.get<BackendProductPageResponse>(
       `${this.baseUrl}${buildQuery(params)}`
     );
+  }
+
+  getProductById(id: string): Observable<BackendProductSingleResponse> {
+    return this.http.get<BackendProductSingleResponse>(`${this.baseUrl}/${id}`);
   }
 }
