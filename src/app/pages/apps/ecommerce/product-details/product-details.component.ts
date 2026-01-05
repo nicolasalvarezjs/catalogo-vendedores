@@ -156,7 +156,6 @@ export class ProductDetailsComponent implements AfterViewInit {
       if (relatedVendorId) {
         this.fetchVendorProducts(relatedVendorId, this.product?.id);
       }
-      this.scrollToTop();
       this.loading = false;
     } else {
       // Página normal: cargar por id desde backend
@@ -227,18 +226,14 @@ export class ProductDetailsComponent implements AfterViewInit {
   }
   viewVendorProduct(p: any) {
     const targetId = p._id || p.id;
-    // Guardar historial para volver atrás dentro del modal
-    if (this.currentProductId) {
-      this.productHistory.push(this.currentProductId);
-    }
-    // Navegamos para mantener la URL compartible aunque sigamos en modal
-    this.router.navigate(['product', targetId]);
-
     if (this.dialogRef) {
-      this.loading = true;
-      this.vendorProducts = [];
-      this.fetchProduct(targetId);
+      // Cerramos este modal y pasamos el id; el caller abrirá uno nuevo inmediatamente
+      this.dialogRef.close(targetId);
+      return;
     }
+
+    // Página normal: navegar al detalle
+    this.router.navigate(['product', targetId]);
   }
 
   private loadProduct(_: any) {
@@ -451,7 +446,6 @@ export class ProductDetailsComponent implements AfterViewInit {
         if (relatedVendorId) {
           this.fetchVendorProducts(relatedVendorId, mapped.id);
         }
-        this.scrollToTop();
         this.loading = false;
       },
       error: (err) => {
@@ -501,33 +495,6 @@ export class ProductDetailsComponent implements AfterViewInit {
         },
         error: (err) => console.error('Error loading vendor products', err),
       });
-  }
-
-  private scrollToTop() {
-    if (typeof window === 'undefined') return;
-    setTimeout(() => {
-      // Scroll de la ventana (para modo página)
-      window.scrollTo({ top: 0, behavior: 'auto' });
-
-      // Scroll del contenedor del diálogo (modo modal a pantalla completa)
-      try {
-        const dialogSurface = document.querySelector(
-          '.product-details-dialog .mat-mdc-dialog-surface'
-        ) as HTMLElement | null;
-        if (dialogSurface) {
-          dialogSurface.scrollTop = 0;
-        }
-
-        const dialogContent = document.querySelector(
-          '.product-details-dialog .details-wrapper'
-        ) as HTMLElement | null;
-        if (dialogContent) {
-          dialogContent.scrollTop = 0;
-        }
-      } catch (e) {
-        console.warn('[scrollToTop] no se pudo scrollear el diálogo', e);
-      }
-    }, 0);
   }
 
   toggleSize(size: string) {

@@ -5,6 +5,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { IconModule } from 'src/app/icon/icon.module';
 import { MaterialModule } from 'src/app/material.module';
 import { Router, ActivatedRoute } from '@angular/router';
+import { combineLatest } from 'rxjs';
 import { CategoriesFilterDialogComponent, CategoriesFilterData } from './categories-filter-dialog.component';
 import { CartDialogComponent } from './cart-dialog.component';
 import { CartService } from 'src/app/services/apps/cart/cart.service';
@@ -57,24 +58,31 @@ export class ShopComponent implements OnInit, AfterViewInit, OnDestroy {
   ];
 
   ngOnInit(): void {
-    this.loadCategories();
     const cached = this.shopState.getState();
     if (cached) {
       this.restoreFromState(cached);
-    } else {
+    }
+
+    if (!this.categories.length) {
+      this.loadCategories();
+    }
+
+    if (!cached || !cached.products?.length) {
       this.loadProducts();
     }
-    this.route.paramMap.subscribe((params) => {
-      const pid = params.get('id');
-      this.handleProductParam(pid);
-    });
+    combineLatest([this.route.paramMap, this.route.queryParamMap]).subscribe(
+      ([params, query]) => {
+        const pid = params.get('id') ?? query.get('product');
+        this.handleProductParam(pid);
+      }
+    );
     window.addEventListener('scroll', this.onWindowScroll, { passive: true });
   }
 
   ngAfterViewInit(): void {
     const cached = this.shopState.getState();
-    if (cached) {
-      setTimeout(() => window.scrollTo({ top: cached.scrollY ?? 0 }), 0);
+    if (cached && typeof cached.scrollY === 'number') {
+      setTimeout(() => window.scrollTo({ top: cached.scrollY }), 0);
     }
   }
 
@@ -167,6 +175,7 @@ export class ShopComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private loadCategories() {
+    if (this.categories.length) return;
     this.categoryApi.getCategories().subscribe({
       next: (cats) => (this.categories = cats || []),
       error: () => (this.categories = []),
@@ -317,7 +326,13 @@ export class ShopComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   openProductDetails(product: any) {
-    this.router.navigate(['/product', product.id || product._id]);
+    const pid = product.id || product._id;
+    // Navega sólo con query param para evitar recrear el componente y mantener el scroll
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { product: pid },
+      queryParamsHandling: 'merge',
+    });
   }
 
   navigateToEmpresa() {
@@ -340,11 +355,25 @@ export class ShopComponent implements OnInit, AfterViewInit, OnDestroy {
             restoreFocus: false,
             disableClose: false,
           });
-          this.productDialogRef.afterClosed().subscribe(() => {
+          this.productDialogRef.afterClosed().subscribe((nextId?: string) => {
             this.productDialogRef = null;
-            const current = this.route.snapshot.paramMap.get('id');
-            if (current) {
+
+            if (nextId) {
+              // Reabrir directamente el siguiente producto
+              this.handleProductParam(nextId);
+              return;
+            }
+
+            const currentParam = this.route.snapshot.paramMap.get('id');
+            const currentQuery = this.route.snapshot.queryParamMap.get('product');
+            if (currentParam) {
               this.router.navigate(['/']);
+            } else if (currentQuery) {
+              this.router.navigate([], {
+                relativeTo: this.route,
+                queryParams: { product: null },
+                queryParamsHandling: 'merge',
+              });
             }
           });
         },
