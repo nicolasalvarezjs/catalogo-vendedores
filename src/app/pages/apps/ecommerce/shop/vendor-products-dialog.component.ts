@@ -825,8 +825,8 @@ export class VendorProductsDialogComponent implements OnInit {
     this.filteredCards = this.allProducts.filter((card) => {
       // Prefer the new `generos` array (case-insensitive match)
       if (Array.isArray(card.generos) && card.generos.length) {
-        return card.generos.some((g: any) =>
-          (g || '').toString().toLowerCase() === normalized
+        return card.generos.some(
+          (g: any) => (g || '').toString().toLowerCase() === normalized
         );
       }
 
@@ -882,7 +882,7 @@ export class VendorProductsDialogComponent implements OnInit {
       vendor: this.data.vendor,
       vendorId: this.data.vendor.id,
       vendorName: this.data.vendor.name,
-      cartItems: this.cartService.getVendorTotalItems(this.data.vendor.id),
+      cartItems: this.cartService.getTotalItems(),
     });
     this.dialog.open(CartDialogComponent, {
       data: {
@@ -901,22 +901,19 @@ export class VendorProductsDialogComponent implements OnInit {
   }
 
   getCartItemCount(): number {
-    const count = this.cartService.getVendorTotalItems(this.data.vendor.id);
+    const count = this.cartService.getTotalItems();
     // Quitar logging repetitivo que spamea consola
     return count;
   }
 
   checkoutViaWhatsApp() {
-    const vendorCart = this.cartService.getVendorCart(this.data.vendor.id);
-    if (!vendorCart || vendorCart.items.length === 0) {
-      // Si no hay productos, mostrar mensaje
-      alert('No hay productos en el carrito para este vendedor');
+    const cart = this.cartService.getCart();
+    if (!cart.items.length) {
+      alert('No hay productos en el carrito');
       return;
     }
-
-    let message = `Hola, quiero comprar los siguientes productos de ${this.data.vendor.name}:\n\n`;
-
-    vendorCart.items.forEach((item: any) => {
+    let message = `Hola, quiero comprar los siguientes productos:\n\n`;
+    cart.items.forEach((item: any) => {
       const price = item.product.dealPrice || item.product.base_price;
       const colorPart = item.colorName ? ` - color: ${item.colorName} ` : '';
       const sizesPart =
@@ -929,26 +926,23 @@ export class VendorProductsDialogComponent implements OnInit {
         price * item.quantity
       }\n`;
     });
-
-    message += `\nTotal: $${vendorCart.total}\n\n`;
-    message += `Vendedor: ${this.data.vendor.name}\n`;
-    message += `ID del vendedor: ${this.data.vendor.id}`;
-
+    message += `\nTotal: $${cart.total}\n\n`;
     // Agregar información de contacto si está disponible
-    if (this.data.vendor.socials?.whatsapp) {
+    if (this.data.vendor?.name) {
+      message += `Vendedor: ${this.data.vendor.name}\n`;
+    }
+    if (this.data.vendor?.id) {
+      message += `ID del vendedor: ${this.data.vendor.id}\n`;
+    }
+    if (this.data.vendor?.socials?.whatsapp) {
       message += `WhatsApp: ${this.data.vendor.socials.whatsapp}\n`;
     }
-    if (this.data.vendor.socials?.web) {
+    if (this.data.vendor?.socials?.web) {
       message += `Web: ${this.data.vendor.socials.web}\n`;
     }
-
-    // Codificar el mensaje para URL
     const encodedMessage = encodeURIComponent(message);
-
-    // Abrir WhatsApp con el mensaje usando número del vendedor si existe (Argentina 54)
-    const rawNumber: string | undefined = this.data.vendor.socials?.whatsapp;
+    const rawNumber: string | undefined = this.data.vendor?.socials?.whatsapp;
     const cleaned = rawNumber ? rawNumber.replace(/[^0-9]/g, '') : '';
-    // Evitar duplicar 54 si ya lo trae
     const sanitizedNumber = cleaned.startsWith('54')
       ? cleaned
       : cleaned
@@ -957,7 +951,6 @@ export class VendorProductsDialogComponent implements OnInit {
     const whatsappUrl = sanitizedNumber
       ? `https://wa.me/${sanitizedNumber}?text=${encodedMessage}`
       : `https://wa.me/?text=${encodedMessage}`;
-    console.log('[checkoutViaWhatsApp] URL generada:', whatsappUrl);
     window.open(whatsappUrl, '_blank');
   }
 

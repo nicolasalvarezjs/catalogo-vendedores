@@ -5,14 +5,13 @@ export interface CartItem {
   product: any; // ProductListItem
   quantity: number;
   vendorId: string;
-  colorName?: string; // nombre del color seleccionado (no hex)
-  sizes?: string[]; // talles seleccionados para venta por unidad
-  minPurchase?: number; // mínimo de compra aplicado al momento de agregar (solo unidad)
+  vendorName?: string;
+  colorName?: string;
+  sizes?: string[];
+  minPurchase?: number;
 }
 
-export interface VendorCart {
-  vendorId: string;
-  vendorName: string;
+export interface GlobalCart {
   items: CartItem[];
   total: number;
 }
@@ -21,20 +20,19 @@ export interface VendorCart {
   providedIn: 'root',
 })
 export class CartService {
-  private cartsSubject = new BehaviorSubject<VendorCart[]>([]);
-  public carts$ = this.cartsSubject.asObservable();
-  private storageKey = 'app_vendor_carts_v1';
+  private cartSubject = new BehaviorSubject<GlobalCart>({
+    items: [],
+    total: 0,
+  });
+  public cart$ = this.cartSubject.asObservable();
+  private storageKey = 'app_global_cart_v1';
 
   constructor() {
     this.restoreFromStorage();
   }
 
-  getCarts(): VendorCart[] {
-    return this.cartsSubject.value;
-  }
-
-  getVendorCart(vendorId: string): VendorCart | undefined {
-    return this.getCarts().find((cart) => cart.vendorId === vendorId);
+  getCart(): GlobalCart {
+    return this.cartSubject.value;
   }
 
   addToCart(
@@ -53,25 +51,11 @@ export class CartService {
       colorName,
       sizes,
     });
-    const carts = this.getCarts();
-    let vendorCart = carts.find((cart) => cart.vendorId === vendorId);
-
-    if (!vendorCart) {
-      vendorCart = {
-        vendorId,
-        vendorName,
-        items: [],
-        total: 0,
-      };
-      carts.push(vendorCart);
-      console.log('Created new vendor cart:', vendorCart);
-    } else {
-      console.log('Found existing vendor cart:', vendorCart);
-    }
-
-    const existingItem = vendorCart.items.find(
+    const cart = this.getCart();
+    const existingItem = cart.items.find(
       (item) =>
         item.product.id === product.id &&
+        item.vendorId === vendorId &&
         item.colorName === colorName &&
         JSON.stringify(item.sizes || []) === JSON.stringify(sizes || [])
     );
@@ -89,118 +73,78 @@ export class CartService {
         product,
         quantity: quantity,
         vendorId,
+        vendorName,
         colorName,
         sizes: sizes && sizes.length ? [...sizes] : undefined,
         minPurchase: computedMin,
       };
-      vendorCart.items.push(newItem);
+      cart.items.push(newItem);
       console.log('Added new item to cart:', newItem);
     }
-
-    this.updateTotal(vendorCart);
-    this.cartsSubject.next([...carts]);
+    this.updateTotal(cart);
+    this.cartSubject.next({ ...cart });
     this.persistToStorage();
-    console.log('Updated carts:', this.getCarts());
+    console.log('Updated cart:', this.getCart());
   }
 
-  removeFromCart(productId: number, vendorId: string): void {
-    const carts = this.getCarts();
-    const vendorCart = carts.find((cart) => cart.vendorId === vendorId);
-    if (vendorCart) {
-      vendorCart.items = vendorCart.items.filter(
-        (item) => item.product.id !== productId
-      );
-      if (vendorCart.items.length === 0) {
-        const index = carts.indexOf(vendorCart);
-        carts.splice(index, 1);
+  removeFromCart(productId: number): void {
+    const cart = this.getCart();
+    cart.items = cart.items.filter((item) => item.product.id !== productId);
+    this.updateTotal(cart);
+    this.cartSubject.next({ ...cart });
+    this.persistToStorage();
+  }
+
+  updateQuantity(productId: number, quantity: number): void {
+    if (quantity <= 0) {
+      this.removeFromCart(productId);
+      return;
+    }
+    const cart = this.getCart();
+    const item = cart.items.find((item) => item.product.id === productId);
+    if (item) {
+      const effectiveMin =
+        item.product?.salesType === 'unidad'
+          ? typeof item.product?.minPurchase === 'number' &&
+            item.product.minPurchase > 0
+            ? item.product.minPurchase
+            : item.minPurchase || 1
+          : 1;
+      if (quantity < effectiveMin) {
+        item.quantity = effectiveMin;
       } else {
-        this.updateTotal(vendorCart);
+        item.quantity = quantity;
       }
-      this.cartsSubject.next([...carts]);
+      this.updateTotal(cart);
+      this.cartSubject.next({ ...cart });
       this.persistToStorage();
     }
   }
 
-  updateQuantity(productId: number, vendorId: string, quantity: number): void {
-    if (quantity <= 0) {
-      this.removeFromCart(productId, vendorId);
-      return;
-    }
-
-    const carts = this.getCarts();
-    const vendorCart = carts.find((cart) => cart.vendorId === vendorId);
-    if (vendorCart) {
-      const item = vendorCart.items.find(
-        (item) => item.product.id === productId
-      );
-      if (item) {
-        const effectiveMin =
-          item.product?.salesType === 'unidad'
-            ? typeof item.product?.minPurchase === 'number' &&
-              item.product.minPurchase > 0
-              ? item.product.minPurchase
-              : item.minPurchase || 1
-            : 1;
-        if (quantity < effectiveMin) {
-          console.warn(
-            '[CartService] Intento de bajar debajo del mínimo. Se fuerza a minPurchase.',
-            {
-              productId,
-              vendorId,
-              requested: quantity,
-              effectiveMin,
-            }
-          );
-          item.quantity = effectiveMin;
-        } else {
-          item.quantity = quantity;
-        }
-        this.updateTotal(vendorCart);
-        this.cartsSubject.next([...carts]);
-        this.persistToStorage();
-      }
-    }
-  }
-
   getTotalItems(): number {
-    return this.getCarts().reduce(
-      (total, cart) => total + cart.items.length,
+    return this.getCart().items.reduce(
+      (total, item) => total + item.quantity,
       0
     );
   }
 
-  getTotalVendors(): number {
-    return this.getCarts().length;
-  }
-
-  getVendorTotalItems(vendorId: string): number {
-    const cart = this.getVendorCart(vendorId);
-    return cart
-      ? cart.items.reduce((total, item) => total + item.quantity, 0)
-      : 0;
-  }
-
-  private updateTotal(vendorCart: VendorCart): void {
-    vendorCart.total = vendorCart.items.reduce((total, item) => {
+  private updateTotal(cart: GlobalCart): void {
+    cart.total = cart.items.reduce((total, item) => {
       const price = item.product.dealPrice || item.product.base_price;
       return total + price * item.quantity;
     }, 0);
   }
 
   clearCart(): void {
-    this.cartsSubject.next([]);
+    this.cartSubject.next({ items: [], total: 0 });
     this.persistToStorage();
   }
 
-  clearVendorCart(vendorId: string): void {
-    const carts = this.getCarts().filter((cart) => cart.vendorId !== vendorId);
-    this.cartsSubject.next(carts);
-    this.persistToStorage();
-  }
+  // clearVendorCart eliminado (no aplica en carrito global)
 
   private persistToStorage(): void {
     try {
-      const data = JSON.stringify(this.getCarts());
+      const data = JSON.stringify(this.getCart());
       localStorage.setItem(this.storageKey, data);
     } catch (e) {
       console.warn('[CartService] Error al guardar en localStorage', e);
@@ -211,11 +155,10 @@ export class CartService {
     try {
       const raw = localStorage.getItem(this.storageKey);
       if (!raw) return;
-      const parsed: VendorCart[] = JSON.parse(raw);
-      // Recalcular totales por seguridad (por si cambió lógica de precio)
-      parsed.forEach((vc) => this.updateTotal(vc));
-      this.cartsSubject.next(parsed);
-      console.log('[CartService] Carritos restaurados desde storage:', parsed);
+      const parsed: GlobalCart = JSON.parse(raw);
+      this.updateTotal(parsed);
+      this.cartSubject.next(parsed);
+      console.log('[CartService] Carrito restaurado desde storage:', parsed);
     } catch (e) {
       console.warn('[CartService] Error al restaurar desde localStorage', e);
     }
