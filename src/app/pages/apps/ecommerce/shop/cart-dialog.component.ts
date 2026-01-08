@@ -310,11 +310,28 @@ export class CartDialogComponent {
 
   async createOrderFromCart(items: CartItem[]): Promise<Order | null> {
     if (!items || !items.length) return null;
-    const productos = items.map((item) => ({
-      productoId: String(item.product.id),
-      vendedorId: String(item.vendorId),
-      cantidad: item.quantity,
-    }));
+    const productos = items.map((item) => {
+      const price = item.product?.dealPrice ?? item.product?.base_price ?? 0;
+      const productSnapshot = {
+        id: item.product?.id,
+        name: item.product?.product_name || item.product?.name,
+        sku: item.product?.sku,
+        brand: item.product?.brand,
+        price,
+      };
+      return {
+        productoId: String(item.product.id),
+        vendedorId: String(item.vendorId),
+        cantidad: item.quantity,
+        seleccion: {
+          color: item.colorName || null,
+          sizes: item.sizes || [],
+          genero: (item as any).genero || null,
+        },
+        productSnapshot,
+        priceAtPurchase: price,
+      };
+    });
     try {
       const order = await this.orderService.create({ productos }).toPromise();
       return order ?? null;

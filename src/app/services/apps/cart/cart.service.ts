@@ -8,6 +8,7 @@ export interface CartItem {
   vendorName?: string;
   colorName?: string;
   sizes?: string[];
+  genero?: string;
   minPurchase?: number;
 }
 
@@ -41,7 +42,8 @@ export class CartService {
     vendorName: string,
     quantity: number = 1,
     colorName?: string,
-    sizes?: string[]
+    sizes?: string[],
+    genero?: string
   ): void {
     console.log('CartService.addToCart called with:', {
       product,
@@ -57,6 +59,7 @@ export class CartService {
         item.product.id === product.id &&
         item.vendorId === vendorId &&
         item.colorName === colorName &&
+        item.genero === genero &&
         JSON.stringify(item.sizes || []) === JSON.stringify(sizes || [])
     );
     if (existingItem) {
@@ -76,6 +79,7 @@ export class CartService {
         vendorName,
         colorName,
         sizes: sizes && sizes.length ? [...sizes] : undefined,
+        genero,
         minPurchase: computedMin,
       };
       cart.items.push(newItem);
