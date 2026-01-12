@@ -3,12 +3,10 @@ import { CommonModule } from '@angular/common';
 import { MaterialModule } from 'src/app/material.module';
 import { IconModule } from 'src/app/icon/icon.module';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import {
-  CartService,
-  CartItem,
-  CartState,
-} from 'src/app/services/apps/cart/cart.service';
+import { CartService, CartItem } from 'src/app/services/apps/cart/cart.service';
 import { MonedaArsPipe } from 'src/app/pipe/moneda-ars.pipe';
+import { OrderService } from 'src/app/services/order.service';
+import { Order } from 'src/app/models/order.model';
 
 interface CartDialogData {
   mode: 'general' | 'vendor';
@@ -30,80 +28,79 @@ interface CartDialogData {
       </div>
 
       <div class="cart-content">
-        @if(cart.items.length){
-        <div class="cart-items">
-          @for(item of cart.items; track item.product.id) {
-          <div class="cart-item">
-            <div class="item-top-row">
-              <img
-                [src]="item.product.imagePath"
-                alt="product"
-                class="item-image"
-              />
-              <div class="item-details">
-                <h4>{{ item.product.product_name }}</h4>
-                @if(item.vendorName){
-                <p class="vendor-line">Vendedor: {{ item.vendorName }}</p>
-                }
-                <p>
-                  {{ item.product.base_price | monedaARS }} x
-                  {{ item.quantity }}
-                </p>
-                <p class="item-subtotal">
-                  <strong
-                    >Subtotal:
-                    {{ item.product.base_price * item.quantity | monedaARS
-                    }}</strong
-                  >
-                </p>
+        <ng-container *ngIf="cartItems.length > 0; else emptyCart">
+          <div class="cart-items">
+            <div
+              class="cart-item"
+              *ngFor="let item of cartItems; trackBy: trackByProductId"
+            >
+              <div class="item-top-row">
+                <img
+                  [src]="item.product.imagePath"
+                  alt="product"
+                  class="item-image"
+                />
+                <div class="item-details">
+                  <h4>{{ item.product.product_name }}</h4>
+                  <p>
+                    {{ item.product.base_price | monedaARS }} x
+                    {{ item.quantity }}
+                  </p>
+                  <p class="item-subtotal">
+                    <strong>
+                      Subtotal:
+                      {{ item.product.base_price * item.quantity | monedaARS }}
+                    </strong>
+                  </p>
+                </div>
+              </div>
+              <div class="quantity-controls">
+                <button
+                  mat-icon-button
+                  (click)="updateQuantity(item.product.id, item.quantity - 1)"
+                  [disabled]="isDecreaseDisabled(item)"
+                >
+                  <mat-icon>remove</mat-icon>
+                </button>
+                <span>{{ item.quantity }}</span>
+                <button
+                  mat-icon-button
+                  (click)="updateQuantity(item.product.id, item.quantity + 1)"
+                >
+                  <mat-icon>add</mat-icon>
+                </button>
+                <button
+                  mat-icon-button
+                  color="warn"
+                  (click)="removeItem(item.product.id)"
+                >
+                  <mat-icon>delete</mat-icon>
+                </button>
               </div>
             </div>
-            <div class="quantity-controls">
-              <button
-                mat-icon-button
-                (click)="updateQuantity(item.product.id, item.quantity - 1)"
-              >
-                <mat-icon>remove</mat-icon>
-              </button>
-              <span>{{ item.quantity }}</span>
-              <button
-                mat-icon-button
-                (click)="updateQuantity(item.product.id, item.quantity + 1)"
-              >
-                <mat-icon>add</mat-icon>
-              </button>
-              <button
-                mat-icon-button
-                color="warn"
-                (click)="removeItem(item.product.id)"
-              >
-                <mat-icon>delete</mat-icon>
-              </button>
+          </div>
+          <div class="cart-summary">
+            <div class="cart-total">
+              <strong>Total: {{ total | monedaARS }}</strong>
             </div>
+            <button
+              mat-flat-button
+              color="primary"
+              class="checkout-btn"
+              (click)="checkoutViaWhatsApp()"
+            >
+              <mat-icon>whatsapp</mat-icon>
+              <span>Finalizar compra</span>
+            </button>
           </div>
-          }
-        </div>
-        <div class="cart-summary">
-          <div class="cart-total">
-            <strong>Total: {{ cart.total | monedaARS }}</strong>
+        </ng-container>
+        <ng-template #emptyCart>
+          <div class="empty-cart">
+            <mat-icon class="empty-icon">shopping_cart</mat-icon>
+            <h3>Carrito vacío</h3>
+            <p>No hay productos en el carrito</p>
           </div>
-          <button
-            mat-flat-button
-            color="primary"
-            class="checkout-btn"
-            (click)="checkoutViaWhatsApp()"
-          >
-            <mat-icon>whatsapp</mat-icon>
-            <span>Finalizar compra</span>
-          </button>
-        </div>
-        } @else {
-        <div class="empty-cart">
-          <mat-icon class="empty-icon">shopping_cart</mat-icon>
-          <h3>Carrito vacío</h3>
-          <p>No hay productos en el carrito</p>
-        </div>
-        }
+        </ng-template>
       </div>
     </div>
   `,
@@ -274,21 +271,23 @@ interface CartDialogData {
   ],
 })
 export class CartDialogComponent {
-  cart: CartState = { items: [], total: 0 };
+  cartItems: CartItem[] = [];
+  total: number = 0;
 
   constructor(
     private cartService: CartService,
+    private orderService: OrderService,
     private dialogRef: MatDialogRef<CartDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: CartDialogData
   ) {
-    console.log('CartDialogComponent opened with data:', data);
     this.cartService.cart$.subscribe((cart) => {
-      this.cart = cart;
+      this.cartItems = cart.items;
+      this.total = cart.total;
     });
   }
 
   updateQuantity(productId: number, quantity: number): void {
-    this.cartService.updateQuantity(productId, '', quantity);
+    this.cartService.updateQuantity(productId, quantity);
   }
 
   removeItem(productId: number): void {
@@ -299,40 +298,72 @@ export class CartDialogComponent {
     this.dialogRef.close();
   }
 
-  checkoutViaWhatsApp(): void {
-    const targetCart = this.cart;
-    if (!targetCart || targetCart.items.length === 0) {
-      console.log('No hay productos en el carrito para hacer checkout');
+  trackByProductId(index: number, item: CartItem) {
+    return item.product.id;
+  }
+
+  async createOrderFromCart(items: CartItem[]): Promise<Order | null> {
+    if (!items || !items.length) return null;
+    const productos = items.map((item) => {
+      const price = item.product?.dealPrice ?? item.product?.base_price ?? 0;
+      const productSnapshot = {
+        id: item.product?.id,
+        name: item.product?.product_name || item.product?.name,
+        sku: item.product?.sku,
+        brand: item.product?.brand,
+        price,
+      };
+      return {
+        productoId: String(item.product.id),
+        vendedorId: String(item.vendorId),
+        cantidad: item.quantity,
+        seleccion: {
+          color: item.colorName || null,
+          sizes: item.sizes || [],
+          genero: (item as any).genero || null,
+        },
+        productSnapshot,
+        priceAtPurchase: price,
+      };
+    });
+    try {
+      const order = await this.orderService.create({ productos }).toPromise();
+      return order ?? null;
+    } catch (err) {
+      console.error('[OrderService] Error al crear pedido:', err);
+      return null;
+    }
+  }
+
+  async checkoutViaWhatsApp(): Promise<void> {
+    if (!this.cartItems || this.cartItems.length === 0) {
       return;
     }
-
-    console.log('Haciendo checkout por WhatsApp con carrito:', targetCart);
-
-    let message = `Hola, quiero finalizar mi compra:\n\n`;
-
-    targetCart.items.forEach((item: CartItem) => {
-      const price = item.product.dealPrice || item.product.base_price;
-      const colorPart = item.colorName ? ` - color: ${item.colorName} ` : '';
+    const order = await this.createOrderFromCart(this.cartItems);
+    if (!order) return;
+    let message = `N° pedido: ${
+      order.orderNumber || ''
+    }\nHola, quiero finalizar mi compra.\n\n`;
+    // Construir mensaje usando los datos legibles del carrito (nombres, vendorName, precios)
+    this.cartItems.forEach((ci) => {
+      const productName =
+        ci.product?.product_name || ci.product?.name || 'Producto sin nombre';
+      const vendorName = ci.vendorName || ci.vendorId || 'Vendedor sin nombre';
+      const price = ci.product?.dealPrice || ci.product?.base_price || 0;
+      const colorPart = ci.colorName ? `Color: ${ci.colorName}` : '';
       const sizesPart =
-        item.sizes && item.sizes.length
-          ? ` - talles: ${item.sizes.join(', ')}`
-          : '';
-      const vendorPart = item.vendorName ? ` (Vendedor: ${item.vendorName})` : '';
-      message += `• ${item.product.product_name}${vendorPart}${colorPart}- Cantidad: ${
-        item.quantity
-      }${sizesPart} - Total línea: $${price * item.quantity}\n`;
+        ci.sizes && ci.sizes.length ? `Talles: ${ci.sizes.join(', ')}` : '';
+      message += `• Producto: ${productName}\n`;
+      message += `  Vendedor: ${vendorName}\n`;
+      message += `  Cantidad: ${ci.quantity}\n`;
+      if (colorPart) message += `  ${colorPart}\n`;
+      if (sizesPart) message += `  ${sizesPart}\n`;
+      if (price) message += `  Total línea: $${price * ci.quantity}\n`;
+      message += '\n';
     });
-
-    message += `\nTotal: $${targetCart.total}\n\n`;
-
-    if (this.data.vendor?.name) {
-      message += `Vendedor de referencia: ${this.data.vendor?.name}`;
-    }
-
-    // Codificar el mensaje para URL
+    // Usar el total ya calculado en el servicio (más confiable)
+    message += `\nTotal: $${this.total}\n`;
     const encodedMessage = encodeURIComponent(message);
-
-    // Tomar número del vendor si se pasó
     const rawNumber: string | undefined = this.data.vendor?.socials?.whatsapp;
     const cleaned = rawNumber ? rawNumber.replace(/[^0-9]/g, '') : '';
     const sanitizedNumber = cleaned.startsWith('54')
@@ -343,20 +374,6 @@ export class CartDialogComponent {
     const whatsappUrl = sanitizedNumber
       ? `https://wa.me/${sanitizedNumber}?text=${encodedMessage}`
       : `https://wa.me/?text=${encodedMessage}`;
-    console.log('[CartDialog checkoutViaWhatsApp] URL generada:', whatsappUrl, {
-      rawNumber,
-      cleaned,
-      sanitizedNumber,
-      vendorId: this.data.vendorId,
-      vendorObject: this.data.vendor,
-      items: targetCart.items.map((i) => ({
-        product: i.product.product_name,
-        color: i.colorName,
-        qty: i.quantity,
-        lineaTotal: (i.product.dealPrice || i.product.base_price) * i.quantity,
-      })),
-      total: targetCart.total,
-    });
     window.open(whatsappUrl, '_blank');
   }
 

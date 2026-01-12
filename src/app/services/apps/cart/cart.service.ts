@@ -4,14 +4,15 @@ import { BehaviorSubject } from 'rxjs';
 export interface CartItem {
   product: any; // ProductListItem
   quantity: number;
-  vendorId?: string;
+  vendorId: string;
   vendorName?: string;
-  colorName?: string; // nombre del color seleccionado (no hex)
-  sizes?: string[]; // talles seleccionados para venta por unidad
-  minPurchase?: number; // mínimo de compra aplicado al momento de agregar (solo unidad)
+  colorName?: string;
+  sizes?: string[];
+  genero?: string;
+  minPurchase?: number;
 }
 
-export interface CartState {
+export interface GlobalCart {
   items: CartItem[];
   total: number;
 }
@@ -20,15 +21,18 @@ export interface CartState {
   providedIn: 'root',
 })
 export class CartService {
-  private cartSubject = new BehaviorSubject<CartState>({ items: [], total: 0 });
+  private cartSubject = new BehaviorSubject<GlobalCart>({
+    items: [],
+    total: 0,
+  });
   public cart$ = this.cartSubject.asObservable();
-  private storageKey = 'app_cart_single_v1';
+  private storageKey = 'app_global_cart_v1';
 
   constructor() {
     this.restoreFromStorage();
   }
 
-  getCart(): CartState {
+  getCart(): GlobalCart {
     return this.cartSubject.value;
   }
 
@@ -38,7 +42,8 @@ export class CartService {
     vendorName: string,
     quantity: number = 1,
     colorName?: string,
-    sizes?: string[]
+    sizes?: string[],
+    genero?: string
   ): void {
     console.log('CartService.addToCart called with:', {
       product,
@@ -49,11 +54,12 @@ export class CartService {
       sizes,
     });
     const cart = this.getCart();
-
     const existingItem = cart.items.find(
       (item) =>
         item.product.id === product.id &&
+        item.vendorId === vendorId &&
         item.colorName === colorName &&
+        item.genero === genero &&
         JSON.stringify(item.sizes || []) === JSON.stringify(sizes || [])
     );
     if (existingItem) {
@@ -73,14 +79,14 @@ export class CartService {
         vendorName,
         colorName,
         sizes: sizes && sizes.length ? [...sizes] : undefined,
+        genero,
         minPurchase: computedMin,
       };
       cart.items.push(newItem);
       console.log('Added new item to cart:', newItem);
     }
-
     this.updateTotal(cart);
-    this.cartSubject.next({ ...cart, items: [...cart.items] });
+    this.cartSubject.next({ ...cart });
     this.persistToStorage();
     console.log('Updated cart:', this.getCart());
   }
@@ -89,18 +95,17 @@ export class CartService {
     const cart = this.getCart();
     cart.items = cart.items.filter((item) => item.product.id !== productId);
     this.updateTotal(cart);
-    this.cartSubject.next({ ...cart, items: [...cart.items] });
+    this.cartSubject.next({ ...cart });
     this.persistToStorage();
   }
 
-  updateQuantity(productId: number, _vendorId: string, quantity: number): void {
+  updateQuantity(productId: number, quantity: number): void {
     if (quantity <= 0) {
       this.removeFromCart(productId);
       return;
     }
-
     const cart = this.getCart();
-    const item = cart.items.find((i) => i.product.id === productId);
+    const item = cart.items.find((item) => item.product.id === productId);
     if (item) {
       const effectiveMin =
         item.product?.salesType === 'unidad'
@@ -110,29 +115,24 @@ export class CartService {
             : item.minPurchase || 1
           : 1;
       if (quantity < effectiveMin) {
-        console.warn(
-          '[CartService] Intento de bajar debajo del mínimo. Se fuerza a minPurchase.',
-          {
-            productId,
-            requested: quantity,
-            effectiveMin,
-          }
-        );
         item.quantity = effectiveMin;
       } else {
         item.quantity = quantity;
       }
       this.updateTotal(cart);
-      this.cartSubject.next({ ...cart, items: [...cart.items] });
+      this.cartSubject.next({ ...cart });
       this.persistToStorage();
     }
   }
 
   getTotalItems(): number {
-    return this.getCart().items.reduce((total, item) => total + item.quantity, 0);
+    return this.getCart().items.reduce(
+      (total, item) => total + item.quantity,
+      0
+    );
   }
 
-  private updateTotal(cart: CartState): void {
+  private updateTotal(cart: GlobalCart): void {
     cart.total = cart.items.reduce((total, item) => {
       const price = item.product.dealPrice || item.product.base_price;
       return total + price * item.quantity;
@@ -143,6 +143,8 @@ export class CartService {
     this.cartSubject.next({ items: [], total: 0 });
     this.persistToStorage();
   }
+
+  // clearVendorCart eliminado (no aplica en carrito global)
 
   private persistToStorage(): void {
     try {
@@ -156,12 +158,8 @@ export class CartService {
   private restoreFromStorage(): void {
     try {
       const raw = localStorage.getItem(this.storageKey);
-      if (!raw) {
-        // Intentar migrar de storage antiguo si existiera
-        this.migrateOldStorage();
-        return;
-      }
-      const parsed: CartState = JSON.parse(raw);
+      if (!raw) return;
+      const parsed: GlobalCart = JSON.parse(raw);
       this.updateTotal(parsed);
       this.cartSubject.next(parsed);
       console.log('[CartService] Carrito restaurado desde storage:', parsed);
@@ -178,14 +176,21 @@ export class CartService {
       const flattened: CartItem[] = [];
       oldParsed.forEach((vc) => {
         (vc.items || []).forEach((it: any) => {
-          flattened.push({ ...it, vendorId: vc.vendorId, vendorName: vc.vendorName });
+          flattened.push({
+            ...it,
+            vendorId: vc.vendorId,
+            vendorName: vc.vendorName,
+          });
         });
       });
-      const migrated: CartState = { items: flattened, total: 0 };
+      const migrated: GlobalCart = { items: flattened, total: 0 };
       this.updateTotal(migrated);
       this.cartSubject.next(migrated);
       this.persistToStorage();
-      console.log('[CartService] Migración de carrito por vendedor -> único', migrated);
+      console.log(
+        '[CartService] Migración de carrito por vendedor -> único',
+        migrated
+      );
     } catch (e) {
       console.warn('[CartService] Error migrando storage antiguo', e);
     }

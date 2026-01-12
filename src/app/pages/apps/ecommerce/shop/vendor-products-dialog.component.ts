@@ -68,9 +68,15 @@ interface VendorProductsDialogData {
           class="filter-sidenav"
           [style.width.px]="mobileSidenavWidth"
         >
-          <div class="mobile-filters-header d-flex align-items-center justify-content-between">
+          <div
+            class="mobile-filters-header d-flex align-items-center justify-content-between"
+          >
             <h4 class="m-0">Filtros</h4>
-            <button mat-icon-button (click)="sidenav.close()" aria-label="Cerrar filtros">
+            <button
+              mat-icon-button
+              (click)="sidenav.close()"
+              aria-label="Cerrar filtros"
+            >
               <mat-icon>close</mat-icon>
             </button>
           </div>
@@ -78,15 +84,19 @@ interface VendorProductsDialogData {
           <div class="p-16">
             <h5 class="section-title">Ordenar</h5>
             <mat-nav-list>
-              <a mat-list-item *ngFor="let note of notes" (click)="getSorted(note.name)">
+              <a
+                mat-list-item
+                *ngFor="let note of notes"
+                (click)="getSorted(note.name)"
+              >
                 <span matListItemTitle>{{ note.name | titlecase }}</span>
               </a>
             </mat-nav-list>
 
             <h5 class="section-title">Categor�as</h5>
             <mat-selection-list
-                [multiple]="true"
-                (selectionChange)="onCategorySelectionChange($event)"
+              [multiple]="true"
+              (selectionChange)="onCategorySelectionChange($event)"
             >
               <mat-list-option
                 *ngFor="let c of categories"
@@ -103,19 +113,28 @@ interface VendorProductsDialogData {
               [(ngModel)]="selectedGender"
               (change)="getGender(selectedGender)"
             >
-              <mat-radio-button *ngFor="let g of genderOptions" [value]="g.value">
+              <mat-radio-button
+                *ngFor="let g of genderOptions"
+                [value]="g.value"
+              >
                 {{ g.label }}
               </mat-radio-button>
             </mat-radio-group>
 
-            <button mat-stroked-button class="w-100 m-t-12" (click)="getRestFilter()">
+            <button
+              mat-stroked-button
+              class="w-100 m-t-12"
+              (click)="getRestFilter()"
+            >
               Restablecer filtros
             </button>
           </div>
         </mat-sidenav>
 
         <mat-sidenav-content class="fullscreen-content">
-          <div class="modal-navbar d-flex align-items-center justify-content-between p-y-12 p-x-16">
+          <div
+            class="modal-navbar d-flex align-items-center justify-content-between p-y-12 p-x-16"
+          >
             <div class="d-flex align-items-center gap-8 flex-wrap">
               <button
                 mat-icon-button
@@ -125,7 +144,10 @@ interface VendorProductsDialogData {
               >
                 <mat-icon>menu</mat-icon>
               </button>
-              <mat-form-field class="hide-hint search-field" appearance="outline">
+              <mat-form-field
+                class="hide-hint search-field"
+                appearance="outline"
+              >
                 <mat-icon matPrefix>search</mat-icon>
                 <input
                   matInput
@@ -145,9 +167,15 @@ interface VendorProductsDialogData {
               </mat-form-field>
             </div>
             <div class="navbar-actions d-flex align-items-center gap-8">
-              <button mat-icon-button (click)="openCart()" aria-label="Abrir carrito">
+              <button
+                mat-icon-button
+                (click)="openCart()"
+                aria-label="Abrir carrito"
+              >
                 <mat-icon>shopping_cart</mat-icon>
-                <span class="cart-badge" *ngIf="getCartItemCount() as count">{{ count }}</span>
+                <span class="cart-badge" *ngIf="getCartItemCount() as count">{{
+                  count
+                }}</span>
               </button>
             </div>
           </div>
@@ -169,31 +197,63 @@ interface VendorProductsDialogData {
             </ng-container>
 
             <ng-template #productsGrid>
-              <div class="col-6 col-lg-3 p-x-4 p-sm-0" *ngFor="let productcard of filteredCards">
+              <div
+                class="col-6 col-lg-3 p-x-4 p-sm-0"
+                *ngFor="let productcard of filteredCards"
+              >
                 <mat-card
                   class="cardWithShadow productcard overflow-hidden b-1 cursor-pointer"
                   (click)="getviewDetails(productcard)"
                 >
                   <div class="img-wrapper position-relative">
-                    <img [src]="productcard.imagePath" alt="imgSrc" class="w-100" mat-card-image />
+                    <img
+                      [src]="productcard.imagePath"
+                      alt="imgSrc"
+                      class="w-100"
+                      mat-card-image
+                    />
                   </div>
-                  <mat-card-content class="p-10 position-relative" style="padding: 10px !important;">
-                    <mat-card-title class="mat-headline-2 f-s-16 m-b-4 product-title text-ellipsis">
+                  <mat-card-content
+                    class="p-10 position-relative"
+                    style="padding: 10px !important;"
+                  >
+                    <mat-card-title
+                      class="mat-headline-2 f-s-16 m-b-4 product-title text-ellipsis"
+                    >
                       {{ productcard.product_name }}
                     </mat-card-title>
-                    <div class="product-meta-line d-flex align-items-center justify-content-between m-b-8">
+                    <div
+                      class="product-meta-line d-flex align-items-center justify-content-between m-b-8"
+                    >
                       <div class="price-line d-flex align-items-center">
-                        <ng-container *ngIf="productcard.dealPrice && productcard.dealPrice < productcard.base_price; else regularPrice">
-                          <span class="price-old f-s-14 f-w-500 m-r-6 text-muted" aria-label="Precio anterior">
+                        <ng-container
+                          *ngIf="
+                            productcard.dealPrice &&
+                              productcard.dealPrice < productcard.base_price;
+                            else regularPrice
+                          "
+                        >
+                          <span
+                            class="price-old f-s-14 f-w-500 m-r-6 text-muted"
+                            aria-label="Precio anterior"
+                          >
                             {{ productcard.base_price | monedaARS }}
                           </span>
-                          <h6 class="price-current f-s-16 f-w-600 m-0 text-success" aria-label="Precio con descuento">
+                          <h6
+                            class="price-current f-s-16 f-w-600 m-0 text-success"
+                            aria-label="Precio con descuento"
+                          >
                             {{ productcard.dealPrice | monedaARS }}
                           </h6>
-                          <span class="discount-badge f-s-12 f-w-600 m-l-6">{{ productcard.discountPercent }}% OFF</span>
+                          <span class="discount-badge f-s-12 f-w-600 m-l-6"
+                            >{{ productcard.discountPercent }}% OFF</span
+                          >
                         </ng-container>
                         <ng-template #regularPrice>
-                          <h6 class="price-current f-s-16 f-w-600 m-0 text-primary" aria-label="Precio">
+                          <h6
+                            class="price-current f-s-16 f-w-600 m-0 text-primary"
+                            aria-label="Precio"
+                          >
                             {{ productcard.base_price | monedaARS }}
                           </h6>
                         </ng-template>
@@ -201,17 +261,41 @@ interface VendorProductsDialogData {
                     </div>
 
                     <div class="wholesale-lines f-s-12">
-                      <div class="line d-flex align-items-center gap-4 m-b-4" *ngIf="productcard.talles">
-                        <i-tabler name="ruler" class="icon-14 text-muted"></i-tabler><strong>Talles:</strong>
-                        <span class="talles-badge">{{ productcard.talles }}</span>
+                      <div
+                        class="line d-flex align-items-center gap-4 m-b-4"
+                        *ngIf="productcard.talles"
+                      >
+                        <i-tabler
+                          name="ruler"
+                          class="icon-14 text-muted"
+                        ></i-tabler
+                        ><strong>Talles:</strong>
+                        <span class="talles-badge">{{
+                          productcard.talles
+                        }}</span>
                       </div>
-                      <div class="line d-flex align-items-center gap-4 m-b-4" *ngIf="productcard.tela">
-                        <i-tabler name="scissors" class="icon-14 text-muted"></i-tabler><strong>Tela:</strong>
+                      <div
+                        class="line d-flex align-items-center gap-4 m-b-4"
+                        *ngIf="productcard.tela"
+                      >
+                        <i-tabler
+                          name="scissors"
+                          class="icon-14 text-muted"
+                        ></i-tabler
+                        ><strong>Tela:</strong>
                         {{ productcard.tela }}
                       </div>
-                      <div class="line generos-line m-b-4" *ngIf="productcard.generos && productcard.generos.length">
+                      <div
+                        class="line generos-line m-b-4"
+                        *ngIf="
+                          productcard.generos && productcard.generos.length
+                        "
+                      >
                         <div class="d-flex align-items-center gap-4">
-                          <i-tabler name="users" class="icon-14 text-muted"></i-tabler>
+                          <i-tabler
+                            name="users"
+                            class="icon-14 text-muted"
+                          ></i-tabler>
                           <strong class="f-w-600">G�neros:</strong>
                         </div>
                         <div class="generos-row d-flex gap-6 m-t-4">
@@ -225,13 +309,28 @@ interface VendorProductsDialogData {
                           </span>
                         </div>
                       </div>
-                      <div class="line d-flex align-items-center gap-4" *ngIf="productcard.categoria">
-                        <i-tabler name="tag" class="icon-14 text-muted"></i-tabler><strong>Categor�a:</strong>
-                        <span class="category-chip">{{ productcard.categoria }}</span>
+                      <div
+                        class="line d-flex align-items-center gap-4"
+                        *ngIf="productcard.categoria"
+                      >
+                        <i-tabler
+                          name="tag"
+                          class="icon-14 text-muted"
+                        ></i-tabler
+                        ><strong>Categor�a:</strong>
+                        <span class="category-chip">{{
+                          productcard.categoria
+                        }}</span>
                       </div>
-                      <div class="line colors-line m-b-4" *ngIf="productcard.colors && productcard.colors.length">
+                      <div
+                        class="line colors-line m-b-4"
+                        *ngIf="productcard.colors && productcard.colors.length"
+                      >
                         <div class="d-flex align-items-center gap-4">
-                          <i-tabler name="palette" class="icon-14 text-muted"></i-tabler>
+                          <i-tabler
+                            name="palette"
+                            class="icon-14 text-muted"
+                          ></i-tabler>
                           <strong class="f-w-600">Colores:</strong>
                         </div>
                         <div class="color-avatars d-flex flex-wrap gap-6 m-t-4">
@@ -241,18 +340,30 @@ interface VendorProductsDialogData {
                             [title]="c.name + ' ' + c.hex"
                             [attr.aria-label]="c.name"
                           >
-                            <span class="swatch" [style.background]="c.hex"></span>
+                            <span
+                              class="swatch"
+                              [style.background]="c.hex"
+                            ></span>
                           </div>
                         </div>
                       </div>
                       <div
                         class="line d-flex align-items-center gap-4 m-b-4"
-                        *ngIf="(!productcard.colors || !productcard.colors.length) && productcard.color"
+                        *ngIf="
+                          (!productcard.colors || !productcard.colors.length) &&
+                          productcard.color
+                        "
                       >
-                        <i-tabler name="palette" class="icon-14 text-muted"></i-tabler>
+                        <i-tabler
+                          name="palette"
+                          class="icon-14 text-muted"
+                        ></i-tabler>
                         <strong>Color:</strong>
                         <span class="color-chip" [title]="productcard.color">
-                          <span class="mini-swatch" [style.background]="productcard.color"></span>
+                          <span
+                            class="mini-swatch"
+                            [style.background]="productcard.color"
+                          ></span>
                           <span class="c-name">{{ productcard.color }}</span>
                         </span>
                       </div>
@@ -350,7 +461,12 @@ interface VendorProductsDialogData {
       }
       .skeleton-img {
         height: 180px;
-        background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 37%, #f0f0f0 63%);
+        background: linear-gradient(
+          90deg,
+          #f0f0f0 25%,
+          #e0e0e0 37%,
+          #f0f0f0 63%
+        );
         background-size: 400% 100%;
         animation: shimmer 1.4s ease infinite;
       }
@@ -583,7 +699,7 @@ export class VendorProductsDialogComponent implements OnInit {
     this.filteredCards = this.allProducts.filter((card) => {
       if (Array.isArray(card.generos) && card.generos.length) {
         return card.generos.some(
-          (g: any) => this.normalizeGender(g) === normalized
+          (g: any) => (g || '').toString().toLowerCase() === normalized
         );
       }
 
@@ -625,6 +741,12 @@ export class VendorProductsDialogComponent implements OnInit {
   }
 
   openCart() {
+    console.log('Abriendo carrito del vendedor (dialog):', {
+      vendor: this.data.vendor,
+      vendorId: this.data.vendor.id,
+      vendorName: this.data.vendor.name,
+      cartItems: this.cartService.getTotalItems(),
+    });
     this.dialog.open(CartDialogComponent, {
       data: { mode: 'general', vendor: this.data.vendor },
       panelClass: ['product-details-dialog'],
@@ -638,7 +760,9 @@ export class VendorProductsDialogComponent implements OnInit {
   }
 
   getCartItemCount(): number {
-    return this.cartService.getTotalItems();
+    const count = this.cartService.getTotalItems();
+    // Quitar logging repetitivo que spamea consola
+    return count;
   }
 
   checkoutViaWhatsApp() {
@@ -647,9 +771,7 @@ export class VendorProductsDialogComponent implements OnInit {
       alert('No hay productos en el carrito');
       return;
     }
-
     let message = `Hola, quiero comprar los siguientes productos:\n\n`;
-
     cart.items.forEach((item: any) => {
       const price = item.product.dealPrice || item.product.base_price;
       const colorPart = item.colorName ? ` - color: ${item.colorName} ` : '';
@@ -657,26 +779,31 @@ export class VendorProductsDialogComponent implements OnInit {
         item.sizes && item.sizes.length
           ? ` - talles: [${item.sizes.join(', ')}]`
           : '';
-      const vendorPart = item.vendorName ? ` (Vendedor: ${item.vendorName})` : '';
+      const vendorPart = item.vendorName
+        ? ` (Vendedor: ${item.vendorName})`
+        : '';
       message += ` ${
         item.product.product_name
-      }${vendorPart}${colorPart}${sizesPart} - Cantidad: ${item.quantity} - Precio: $${
-        price * item.quantity
-      }\n`;
+      }${vendorPart}${colorPart}${sizesPart} - Cantidad: ${
+        item.quantity
+      } - Precio: $${price * item.quantity}\n`;
     });
-
     message += `\nTotal: $${cart.total}\n\n`;
-
-    if (this.data.vendor.socials?.whatsapp) {
+    // Agregar información de contacto si está disponible
+    if (this.data.vendor?.name) {
+      message += `Vendedor: ${this.data.vendor.name}\n`;
+    }
+    if (this.data.vendor?.id) {
+      message += `ID del vendedor: ${this.data.vendor.id}\n`;
+    }
+    if (this.data.vendor?.socials?.whatsapp) {
       message += `WhatsApp: ${this.data.vendor.socials.whatsapp}\n`;
     }
-    if (this.data.vendor.socials?.web) {
+    if (this.data.vendor?.socials?.web) {
       message += `Web: ${this.data.vendor.socials.web}\n`;
     }
-
     const encodedMessage = encodeURIComponent(message);
-
-    const rawNumber: string | undefined = this.data.vendor.socials?.whatsapp;
+    const rawNumber: string | undefined = this.data.vendor?.socials?.whatsapp;
     const cleaned = rawNumber ? rawNumber.replace(/[^0-9]/g, '') : '';
     const sanitizedNumber = cleaned.startsWith('54')
       ? cleaned

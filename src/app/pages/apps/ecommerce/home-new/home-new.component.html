@@ -1,0 +1,120 @@
+<div class="home-new-wrapper">
+  <!-- Header/Navbar -->
+  <header class="home-navbar">
+    <div class="logo-title">
+      <img
+        src="assets/images/logos/DW.jpg"
+        alt="DezainWeb Logo"
+        class="home-logo"
+      />
+      <span class="home-title">DezainWeb</span>
+    </div>
+    <div class="home-icons">
+      <mat-icon>favorite_border</mat-icon>
+      <mat-icon>shopping_cart</mat-icon>
+      <mat-icon>person_outline</mat-icon>
+    </div>
+  </header>
+
+  <!-- Buscador centrado sobre el banner -->
+  <div class="home-search-bar-wrapper">
+    <div class="home-search-input-wrapper">
+      <input
+        type="text"
+        class="home-search"
+        placeholder="Busca productos o tiendas..."
+      />
+      <mat-icon class="search-icon">search</mat-icon>
+    </div>
+  </div>
+
+  <!-- Banner principal -->
+  <section class="home-banner">
+    <img
+      src="assets/images/profile/image.png"
+      alt="Banner"
+      class="banner-img"
+    />
+    <div class="banner-text">
+      <h2>Nuevas Colecciones –<br />¡Hasta 50% de descuento!</h2>
+    </div>
+  </section>
+
+  <!-- Productos Destacados y Vendedores Top en la misma fila -->
+  <section class="home-featured-row-grid">
+    <div class="featured-col">
+      <h3>PRODUCTOS DESTACADOS</h3>
+      <div class="featured-list-grid">
+        <div
+          class="featured-item"
+          *ngFor="let product of featuredProducts | slice : 0 : 4"
+        >
+          <img
+            [src]="
+              product.images && product.images.length > 0
+                ? product.images[0]
+                : 'https://via.placeholder.com/100x120?text=Producto'
+            "
+            [alt]="product.product_name"
+            onerror="this.onerror=null;this.src='https://via.placeholder.com/100x120?text=Producto';"
+          />
+          <div class="featured-info">
+            <div class="featured-title">{{ product.product_name }}</div>
+            <div class="featured-price">
+              {{
+                product.base_price
+                  | currency : "EUR" : "symbol" : "1.2-2" : "es"
+              }}
+            </div>
+            <div class="featured-vendor" *ngIf="product.vendorId">
+              by {{ getVendorName(product.vendorId) }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="vendors-col">
+      <h3>VENDEDORES TOP</h3>
+      <div class="top-vendors-list-grid">
+        <div
+          class="vendor-circle"
+          *ngFor="let vendor of topVendors | slice : 0 : 4"
+        >
+          <div class="vendor-icon">
+            <img
+              [src]="
+                vendor.logoPath || 'https://via.placeholder.com/48x48?text=Logo'
+              "
+              [alt]="'Logo ' + vendor.name"
+              style="
+                width: 48px;
+                height: 48px;
+                border-radius: 50%;
+                object-fit: cover;
+              "
+              onerror="this.onerror=null;this.src='https://via.placeholder.com/48x48?text=Logo';"
+            />
+          </div>
+          <div class="vendor-name">{{ vendor.name }}</div>
+          <div class="vendor-rating" *ngIf="vendor.rating">
+            {{ vendor.rating }} ★
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Categorías Populares -->
+  <footer class="home-footer">
+    <div class="footer-categories">
+      <span class="cat-title">Categorías Populares:</span>
+      <span class="cat-list"
+        >Vestidos, Camisetas, Pantalones, Accesorios, Zapatos</span
+      >
+    </div>
+    <div class="footer-links">
+      <a href="#">Sobre Nosotros</a> · <a href="#">Ayuda</a> ·
+      <a href="#">Términos y Condiciones</a>
+    </div>
+  </footer>
+</div>
