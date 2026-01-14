@@ -1,5 +1,5 @@
 import { Component, Inject } from '@angular/core';
-import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { CommonModule } from '@angular/common';
 import { MaterialModule } from 'src/app/material.module';
 import { FormsModule } from '@angular/forms';
@@ -7,6 +7,7 @@ import { FormsModule } from '@angular/forms';
 export interface CategoriesFilterData {
   allCategories: string[];
   selectedCategories: string[];
+  onSelectionChange?: (categories: string[]) => void;
 }
 
 @Component({
@@ -16,20 +17,27 @@ export interface CategoriesFilterData {
     <div class="categories-filter-dialog">
       <h2 mat-dialog-title>Filtrar por Categorías</h2>
       <mat-dialog-content>
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-select
-            [(value)]="data.selectedCategories"
-            multiple
-            placeholder="Seleccionar categorías">
-            @for(category of data.allCategories; track category) {
-              <mat-option [value]="category">{{ category }}</mat-option>
+        @if (data.allCategories.length) {
+          <mat-selection-list
+            class="category-list"
+            [(ngModel)]="data.selectedCategories"
+            [multiple]="true"
+            (ngModelChange)="handleSelectionChange($event)"
+          >
+            @for (category of data.allCategories; track category) {
+              <mat-list-option [value]="category">
+                {{ category }}
+              </mat-list-option>
             }
-          </mat-select>
-        </mat-form-field>
+          </mat-selection-list>
+        } @else {
+          <div class="empty-placeholder">
+            No hay categorías disponibles en este momento.
+          </div>
+        }
       </mat-dialog-content>
       <mat-dialog-actions align="end">
         <button mat-button (click)="clearFilters()">Limpiar</button>
-        <button mat-button mat-dialog-close>Aplicar</button>
       </mat-dialog-actions>
     </div>
   `,
@@ -37,18 +45,31 @@ export interface CategoriesFilterData {
     .categories-filter-dialog {
       min-width: 300px;
     }
-    .full-width {
+
+    .category-list {
       width: 100%;
+      max-height: 60vh;
+      overflow: auto;
+    }
+
+    .empty-placeholder {
+      padding: 16px;
+      text-align: center;
+      color: rgba(0, 0, 0, 0.54);
     }
   `]
 })
 export class CategoriesFilterDialogComponent {
-  constructor(
-    public dialogRef: MatDialogRef<CategoriesFilterDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: CategoriesFilterData
-  ) {}
+  constructor(@Inject(MAT_DIALOG_DATA) public data: CategoriesFilterData) {}
 
   clearFilters() {
     this.data.selectedCategories = [];
+    this.data.onSelectionChange?.([]);
+  }
+
+  handleSelectionChange(categories: string[] | null | undefined) {
+    const next = Array.isArray(categories) ? categories : [];
+    this.data.selectedCategories = next;
+    this.data.onSelectionChange?.([...next]);
   }
 }

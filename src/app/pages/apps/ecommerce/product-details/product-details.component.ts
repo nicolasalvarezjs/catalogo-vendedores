@@ -106,9 +106,7 @@ export class ProductDetailsComponent implements AfterViewInit {
   slides: Slide[] = [];
   activeIndex = 0;
   vendor: DetailVendor | undefined;
-  vendorProducts: any[] = [];
   private currentProductId: string | null = null;
-  private productHistory: string[] = [];
   // TODO(Revisar futuro): distribución de ratings para pestaña de reseñas
   // ratings = [ { label: 1, value: 30, count: 485 }, { label: 2, value: 20, count: 215 }, { label: 3, value: 10, count: 110 }, { label: 4, value: 60, count: 620 }, { label: 5, value: 15, count: 160 } ];
 
@@ -147,15 +145,6 @@ export class ProductDetailsComponent implements AfterViewInit {
       // Ajustar cantidad inicial según minPurchase
       this.quantity = Math.max(this.quantity, this.minPurchase);
       this.initSizes();
-      // Cargar otros productos del mismo vendedor al abrir como modal
-      const relatedVendorId =
-        this.vendor?.id ||
-        (typeof this.product?.vendorId === 'string'
-          ? this.product.vendorId
-          : undefined);
-      if (relatedVendorId) {
-        this.fetchVendorProducts(relatedVendorId, this.product?.id);
-      }
       this.loading = false;
     } else {
       // Página normal: cargar por id desde backend
@@ -204,14 +193,6 @@ export class ProductDetailsComponent implements AfterViewInit {
   getBack() {
     // Si está en modal, cerrar; si no, navegar atrás
     if (this.dialogRef) {
-      if (this.productHistory.length) {
-        const prevId = this.productHistory.pop();
-        if (prevId) {
-          this.router.navigate(['product', prevId]);
-          this.fetchProduct(prevId);
-          return;
-        }
-      }
       this.dialogRef.close();
       this.router.navigate(['']);
     } else {
@@ -224,18 +205,6 @@ export class ProductDetailsComponent implements AfterViewInit {
   resetToggleValue() {
     this.toggleValue = null;
   }
-  viewVendorProduct(p: any) {
-    const targetId = p._id || p.id;
-    if (this.dialogRef) {
-      // Cerramos este modal y pasamos el id; el caller abrirá uno nuevo inmediatamente
-      this.dialogRef.close(targetId);
-      return;
-    }
-
-    // Página normal: navegar al detalle
-    this.router.navigate(['product', targetId]);
-  }
-
   private loadProduct(_: any) {
     /* deprecated legacy mock method removed */
   }
@@ -433,19 +402,7 @@ export class ProductDetailsComponent implements AfterViewInit {
     this.productApi.getProductById(id).subscribe({
       next: (p) => {
         const mapped = this.mapBackendProduct(p);
-        this.currentProductId = mapped.id || mapped._id || id;
-        this.product = mapped;
-        this.vendor = mapped.vendorMeta;
-        this.buildSlides(mapped);
-        this.extractColors(mapped);
-        this.quantity = Math.max(this.quantity, this.minPurchase);
-        this.initSizes();
-        const relatedVendorId =
-          mapped.vendorMeta?.id ||
-          (typeof mapped.vendorId === 'string' ? mapped.vendorId : undefined);
-        if (relatedVendorId) {
-          this.fetchVendorProducts(relatedVendorId, mapped.id);
-        }
+        this.applyProduct(mapped, id);
         this.loading = false;
       },
       error: (err) => {
@@ -483,19 +440,22 @@ export class ProductDetailsComponent implements AfterViewInit {
     } as Product & { id?: string; vendorMeta?: DetailVendor };
   }
 
-  private fetchVendorProducts(vendorId: string, excludeId?: string) {
-    this.productApi
-      .getProducts({ page: 1, limit: 8, vendorId })
-      .subscribe({
-        next: (res) => {
-          const mapped = res.products
-            .map((p) => this.mapBackendProduct(p))
-            .filter((p: any) => (p.id || p._id) !== excludeId);
-          this.vendorProducts = mapped;
-        },
-        error: (err) => console.error('Error loading vendor products', err),
-      });
+  private applyProduct(
+    mapped: Product & { id?: string; vendorMeta?: DetailVendor },
+    fallbackId?: string
+  ) {
+    this.currentProductId = mapped.id || (mapped as any)._id || fallbackId || null;
+    this.product = mapped;
+    this.vendor = mapped.vendorMeta;
+    this.selectedColorName = null;
+    this.selectedColorHex = null;
+    this.buildSlides(mapped);
+    this.extractColors(mapped);
+    this.quantity = Math.max(1, this.minPurchase);
+    this.initSizes();
   }
+
+  
 
   toggleSize(size: string) {
     if (!size) return;

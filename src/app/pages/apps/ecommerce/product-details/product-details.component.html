@@ -111,55 +111,12 @@
       <div class="col-lg-4">
         <!-- Chips de estado y categoría removidos temporalmente -->
         <h3 class="m-t-10 f-w-600">{{ product?.product_name }}</h3>
-        @if(vendor){
-        <div class="vendor-line d-flex align-items-center gap-8 m-t-4">
-          @if(vendor.logoPath){
-          <img
-            [src]="vendor.logoPath"
-            [alt]="'Logo ' + vendor.name"
-            class="vendor-logo"
-            loading="lazy"
-          />
-          }
-          <div class="f-s-14">
-            Vendedor: <span class="f-w-600">{{ vendor.name }}</span>
-          </div>
-        </div>
-        @if(vendor.doesShipping){
-        <div class="f-s-13 m-t-4 d-flex align-items-center gap-4 shipping-line">
-          <i-tabler name="truck" class="icon-20 text-success shipping-icon"></i-tabler>
-          <span class="shipping-text">{{ vendor.shippingDetail || 'Realiza envíos' }}</span>
-        </div>
-        }
-        }
-        <div
-          class="m-t-4 f-s-14 f-w-500 sales-type-line"
-          *ngIf="product?.salesType as st"
-        >
-          <ng-container [ngSwitch]="st">
-            <span *ngSwitchCase="'unidad'">
-              Venta por <strong>unidad</strong>
-              <ng-container *ngIf="minPurchase > 1">
-                | Mínimo: <strong>{{ minPurchase }}</strong></ng-container
-              >
-            </span>
-            <span *ngSwitchDefault>
-              Curva:
-              <strong>{{ formatTalles(product?.talles) || "N/D" }}</strong>
-            </span>
-          </ng-container>
-        </div>
         <div class="f-s-14 m-t-8 wholesale-extra">
           @if(product?.talles){
           <div class="line d-flex align-items-center gap-4 m-b-4">
             <i-tabler name="ruler" class="icon-14 text-muted"></i-tabler
             ><strong>Talles:</strong>
             <span class="talles-badge">{{ product?.talles }}</span>
-          </div>
-          } @if(product?.tela){
-          <div class="line d-flex align-items-center gap-4 m-b-4">
-            <i-tabler name="scissors" class="icon-14 text-muted"></i-tabler
-            ><strong>Tela:</strong> {{ product?.tela }}
           </div>
           } @if(product?.generos?.length){
           <div class="line d-flex align-items-center gap-4 m-b-4">
@@ -170,12 +127,6 @@
               <span class="category-chip genero-chip">{{ g }}</span>
               }
             </span>
-          </div>
-          } @if(product?.salesType){
-          <div class="line d-flex align-items-center gap-4 m-b-4">
-            <i-tabler name="cash" class="icon-14 text-muted"></i-tabler>
-            <strong>Tipo de venta:</strong>
-            <span class="category-chip">{{ product?.salesType }}</span>
           </div>
           } @if(product?.categoria){
           <div class="line d-flex align-items-center gap-4">
@@ -253,67 +204,6 @@
         <div class="m-y-24 d-flex">
           <!-- Estrellas removidas -->
         </div>
-        <mat-divider></mat-divider>
-        <div
-          class="colors-block m-t-16"
-          *ngIf="colorSwatches.length || product?.color"
-        >
-          <label class="f-s-16 f-w-600 m-b-8 d-block"
-            >Colores disponibles</label
-          >
-          <div class="color-chips">
-            @for(c of colorSwatches; track c.hex){
-            <button
-              type="button"
-              class="color-chip"
-              [class.selected]="c.name === selectedColorName"
-              (click)="setSelectedColor(c)"
-              [title]="c.name"
-            >
-              <span class="swatch" [style.background]="c.hex"></span>
-              <span class="color-name">{{ c.name }}</span>
-            </button>
-            } @if(!colorSwatches.length && product?.color){
-            <div class="color-chip legacy" [title]="product.color">
-              <span class="swatch" [style.background]="product.color"></span>
-              <span class="color-name">{{ product.color }}</span>
-            </div>
-            }
-          </div>
-          <div class="selected-color-label" *ngIf="selectedColorName">
-            Color seleccionado: <strong>{{ selectedColorName }}</strong>
-          </div>
-        </div>
-        <div class="d-flex align-items-center m-b-30 m-t-10">
-          <label class="f-s-16 f-w-600">Cant:</label>
-          <mat-button-toggle-group
-            #toggleGroup="matButtonToggleGroup"
-            class="border-style m-x-20"
-            [(value)]="toggleValue"
-            multiple
-          >
-            <mat-button-toggle
-              [disabled]="isDecreaseDisabled()"
-              (click)="decreaseQty(); toggleGroup.value = null"
-              disableRipple
-              >-</mat-button-toggle
-            >
-            <mat-button-toggle disableRipple>{{ quantity }}</mat-button-toggle>
-            <mat-button-toggle
-              (click)="increaseQty(); toggleGroup.value = null"
-              disableRipple
-              >+</mat-button-toggle
-            >
-          </mat-button-toggle-group>
-        </div>
-        @if(product?.salesType === 'unidad' && minPurchase > 1){
-        <div class="f-s-12 text-muted m-t--20 m-b-20">
-          Compra mínima: <strong>{{ minPurchase }}</strong> unidad<span
-            *ngIf="minPurchase > 1"
-            >es</span
-          >.
-        </div>
-        }
         <mat-divider></mat-divider>
         <div class="d-flex align-items-center m-y-20">
           <!-- Botón de agregar al carrito -->
@@ -408,34 +298,4 @@
     </mat-tab-group>
   </mat-card>
 
-  @if(vendorProducts.length){
-  <mat-card class="cardWithShadow b-1 rounded p-30 details-card m-t-20">
-    <div class="d-flex align-items-center justify-content-between m-b-12">
-      <h4 class="m-0">Más productos del vendedor</h4>
-    </div>
-    <div class="related-scroll" role="list">
-      @for(p of vendorProducts; track p.id){
-      <div class="related-card" role="listitem">
-        <mat-card
-          class="cardWithShadow productcard overflow-hidden b-1 cursor-pointer"
-          (click)="viewVendorProduct(p)"
-        >
-          <div class="thumb">
-            <img
-              [src]="p.imagePath"
-              alt="Producto"
-              loading="lazy"
-              (error)="onImgError($event)"
-            />
-          </div>
-          <mat-card-content class="p-10">
-            <div class="name text-ellipsis">{{ p.product_name }}</div>
-            <div class="price f-w-600 text-primary">{{ p.base_price | monedaARS }}</div>
-          </mat-card-content>
-        </mat-card>
-      </div>
-      }
-    </div>
-  </mat-card>
-  }
 </div>

@@ -42,33 +42,17 @@ interface CartDialogData {
                 />
                 <div class="item-details">
                   <h4>{{ item.product.product_name }}</h4>
-                  <p>
-                    {{ item.product.base_price | monedaARS }} x
-                    {{ item.quantity }}
-                  </p>
-                  <p class="item-subtotal">
+                  <p class="item-price">
                     <strong>
-                      Subtotal:
-                      {{ item.product.base_price * item.quantity | monedaARS }}
+                      {{
+                        (item.product.dealPrice || item.product.base_price)
+                          | monedaARS
+                      }}
                     </strong>
                   </p>
                 </div>
               </div>
-              <div class="quantity-controls">
-                <button
-                  mat-icon-button
-                  (click)="updateQuantity(item.product.id, item.quantity - 1)"
-                  [disabled]="isDecreaseDisabled(item)"
-                >
-                  <mat-icon>remove</mat-icon>
-                </button>
-                <span>{{ item.quantity }}</span>
-                <button
-                  mat-icon-button
-                  (click)="updateQuantity(item.product.id, item.quantity + 1)"
-                >
-                  <mat-icon>add</mat-icon>
-                </button>
+              <div class="item-actions">
                 <button
                   mat-icon-button
                   color="warn"
@@ -208,18 +192,18 @@ interface CartDialogData {
         margin: 0.25rem 0;
         color: #666;
       }
-      .item-subtotal {
-        color: #333;
-        margin-top: 0.5rem;
+      .item-price {
+        margin: 0.5rem 0 0 0;
+        color: #5F2BAD;
       }
-      .quantity-controls {
+      .item-actions {
         display: flex;
         align-items: center;
-        justify-content: center;
+        justify-content: flex-end;
         gap: 0.5rem;
         background: #f5f5f5;
         border-radius: 4px;
-        padding: 0.25rem;
+        padding: 0.5rem 0.75rem;
         align-self: center;
       }
       .cart-summary {
@@ -284,10 +268,6 @@ export class CartDialogComponent {
       this.cartItems = cart.items;
       this.total = cart.total;
     });
-  }
-
-  updateQuantity(productId: number, quantity: number): void {
-    this.cartService.updateQuantity(productId, quantity);
   }
 
   removeItem(productId: number): void {
@@ -355,10 +335,9 @@ export class CartDialogComponent {
         ci.sizes && ci.sizes.length ? `Talles: ${ci.sizes.join(', ')}` : '';
       message += `• Producto: ${productName}\n`;
       message += `  Vendedor: ${vendorName}\n`;
-      message += `  Cantidad: ${ci.quantity}\n`;
       if (colorPart) message += `  ${colorPart}\n`;
       if (sizesPart) message += `  ${sizesPart}\n`;
-      if (price) message += `  Total línea: $${price * ci.quantity}\n`;
+      if (price) message += `  Precio: $${price}\n`;
       message += '\n';
     });
     // Usar el total ya calculado en el servicio (más confiable)
@@ -377,18 +356,4 @@ export class CartDialogComponent {
     window.open(whatsappUrl, '_blank');
   }
 
-  getMinPurchase(item: CartItem): number {
-    if (item.product?.salesType === 'unidad') {
-      const raw = item.product?.minPurchase;
-      if (typeof raw === 'number' && raw > 0) return raw;
-      if (typeof item.minPurchase === 'number' && item.minPurchase > 0)
-        return item.minPurchase;
-      return 1;
-    }
-    return 1;
-  }
-
-  isDecreaseDisabled(item: CartItem): boolean {
-    return item.quantity <= this.getMinPurchase(item);
-  }
 }

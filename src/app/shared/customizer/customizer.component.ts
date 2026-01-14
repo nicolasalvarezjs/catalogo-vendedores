@@ -46,7 +46,10 @@ export class CustomizerComponent {
   constructor() {
     // Load from localStorage if available
     const savedTheme = localStorage.getItem('activeTheme');
-    if (savedTheme) {
+    if (savedTheme === 'orange_theme') {
+      this.options.activeTheme = 'pink_theme';
+      localStorage.setItem('activeTheme', 'pink_theme');
+    } else if (savedTheme) {
       this.options.activeTheme = savedTheme;
     }
   }

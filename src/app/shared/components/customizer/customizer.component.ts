@@ -24,9 +24,9 @@ export class CustomizerComponent implements OnInit {
     {
       id: 'pink',
       name: 'Rosa DW',
-      primary: '#C7346F',    // Rojo-Púrpura del logo
-      secondary: '#f48fb1',
-      accent: '#ec407a'
+      primary: '#F2C77A',    // Primario personalizado
+      secondary: '#f5d49a',
+      accent: '#d1a660'
     },
     {
       id: 'deep-blue',

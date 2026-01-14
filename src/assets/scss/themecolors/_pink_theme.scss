@@ -2,8 +2,9 @@
 @use "@angular/material" as mat;
 
 html.pink_theme {
-  --mat-sys-primary: #C7346F;
-  --mat-sys-primary-fixed-dim: #C7346F;
+  --mat-sys-primary: #F2C77A;
+  --mat-sys-primary-fixed-dim: rgba(242, 199, 122, 0.2);
+  --mat-sys-on-primary: #5F2BAD;
   --mat-sys-secondary: rgb(94, 36, 77);
   --mat-sys-secondary-fixed-dim: rgb(94, 36, 77, 0.15);
   --mat-sys-tertiary: rgb(94, 36, 77);

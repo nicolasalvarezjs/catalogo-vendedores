@@ -55,35 +55,38 @@ export class CartService {
     });
     const cart = this.getCart();
     const existingItem = cart.items.find(
-      (item) =>
-        item.product.id === product.id &&
-        item.vendorId === vendorId &&
-        item.colorName === colorName &&
-        item.genero === genero &&
-        JSON.stringify(item.sizes || []) === JSON.stringify(sizes || [])
+      (item) => item.product.id === product.id && item.vendorId === vendorId
     );
+    const normalizedSizes = sizes && sizes.length ? [...sizes] : undefined;
+    const computedMin =
+      product?.salesType === 'unidad' &&
+      typeof product?.minPurchase === 'number' &&
+      product.minPurchase > 0
+        ? product.minPurchase
+        : 1;
+
     if (existingItem) {
-      existingItem.quantity += quantity;
-      console.log('Increased quantity for existing item:', existingItem);
+      existingItem.product = product;
+      existingItem.quantity = 1;
+      existingItem.vendorName = vendorName;
+      existingItem.colorName = colorName;
+      existingItem.sizes = normalizedSizes;
+      existingItem.genero = genero;
+      existingItem.minPurchase = computedMin;
+      console.log('Updated existing cart item with single quantity:', existingItem);
     } else {
-      const computedMin =
-        product?.salesType === 'unidad' &&
-        typeof product?.minPurchase === 'number' &&
-        product.minPurchase > 0
-          ? product.minPurchase
-          : 1;
       const newItem: CartItem = {
         product,
-        quantity: quantity,
+        quantity: 1,
         vendorId,
         vendorName,
         colorName,
-        sizes: sizes && sizes.length ? [...sizes] : undefined,
+        sizes: normalizedSizes,
         genero,
         minPurchase: computedMin,
       };
       cart.items.push(newItem);
-      console.log('Added new item to cart:', newItem);
+      console.log('Added new single-quantity item to cart:', newItem);
     }
     this.updateTotal(cart);
     this.cartSubject.next({ ...cart });
@@ -99,43 +102,15 @@ export class CartService {
     this.persistToStorage();
   }
 
-  updateQuantity(productId: number, quantity: number): void {
-    if (quantity <= 0) {
-      this.removeFromCart(productId);
-      return;
-    }
-    const cart = this.getCart();
-    const item = cart.items.find((item) => item.product.id === productId);
-    if (item) {
-      const effectiveMin =
-        item.product?.salesType === 'unidad'
-          ? typeof item.product?.minPurchase === 'number' &&
-            item.product.minPurchase > 0
-            ? item.product.minPurchase
-            : item.minPurchase || 1
-          : 1;
-      if (quantity < effectiveMin) {
-        item.quantity = effectiveMin;
-      } else {
-        item.quantity = quantity;
-      }
-      this.updateTotal(cart);
-      this.cartSubject.next({ ...cart });
-      this.persistToStorage();
-    }
-  }
-
   getTotalItems(): number {
-    return this.getCart().items.reduce(
-      (total, item) => total + item.quantity,
-      0
-    );
+    return this.getCart().items.length;
   }
 
   private updateTotal(cart: GlobalCart): void {
     cart.total = cart.items.reduce((total, item) => {
-      const price = item.product.dealPrice || item.product.base_price;
-      return total + price * item.quantity;
+      const price = item.product.dealPrice || item.product.base_price || 0;
+      const qty = item.quantity && item.quantity > 0 ? item.quantity : 1;
+      return total + price * qty;
     }, 0);
   }
 
@@ -160,12 +135,19 @@ export class CartService {
       const raw = localStorage.getItem(this.storageKey);
       if (!raw) return;
       const parsed: GlobalCart = JSON.parse(raw);
+      this.normalizeQuantities(parsed);
       this.updateTotal(parsed);
       this.cartSubject.next(parsed);
       console.log('[CartService] Carrito restaurado desde storage:', parsed);
     } catch (e) {
       console.warn('[CartService] Error al restaurar desde localStorage', e);
     }
+  }
+
+  private normalizeQuantities(cart: GlobalCart): void {
+    cart.items.forEach((item) => {
+      item.quantity = 1;
+    });
   }
 
   private migrateOldStorage() {

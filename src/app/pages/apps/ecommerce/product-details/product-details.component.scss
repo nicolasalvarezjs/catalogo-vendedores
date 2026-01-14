@@ -141,6 +141,14 @@
   text-align: right;
   font-size: 14px;
 }
+
+.price-block {
+  .text-primary,
+  .text-success,
+  .text-primary strong {
+    color: #5F2BAD !important;
+  }
+}
 .cards-circle {
   width: 25px;
   height: 25px;
@@ -539,6 +547,7 @@
 
 .related-card .price {
   font-size: 13px;
+  color: #5f2bad;
 }
 
 @media (max-width: 480px) {

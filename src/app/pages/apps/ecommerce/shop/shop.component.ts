@@ -35,12 +35,16 @@ export class ShopComponent implements OnInit, AfterViewInit, OnDestroy {
   private shopState = inject(ShopStateService);
 
   private productDialogRef: any = null;
+  private productsById = new Map<string, any>();
+  private pendingProductId: string | null = null;
 
   searchText: string = '';
   products: any[] = [];
   filteredProducts: any[] = [];
   categories: BackendCategory[] = [];
   selectedCategories: string[] = [];
+  private loadingCategories = false;
+  private categoryFetchCallbacks: Array<() => void> = [];
 
   backendPage = 1;
   backendLimit = 12;
@@ -157,6 +161,12 @@ export class ShopComponent implements OnInit, AfterViewInit, OnDestroy {
       .subscribe({
         next: (res) => {
           const mapped = res.products.map((p) => this.mapBackendProduct(p));
+          mapped.forEach((product) => {
+            const pid = product?.id;
+            if (pid) {
+              this.productsById.set(pid, product);
+            }
+          });
           this.products.push(...mapped);
           this.filteredProducts = [...this.products];
           this.applyFilters();
@@ -166,20 +176,23 @@ export class ShopComponent implements OnInit, AfterViewInit, OnDestroy {
           } else {
             this.backendPage += 1;
           }
+          this.resolvePendingProduct();
         },
         error: (err) => {
           console.error('Error cargando productos backend', err);
         },
-        complete: () => (this.loadingBackend = false),
+        complete: () => {
+          this.loadingBackend = false;
+          this.resolvePendingProduct();
+        },
       });
   }
 
   private loadCategories() {
-    if (this.categories.length) return;
-    this.categoryApi.getCategories().subscribe({
-      next: (cats) => (this.categories = cats || []),
-      error: () => (this.categories = []),
-    });
+    if (this.categories.length || this.loadingCategories) {
+      return;
+    }
+    this.fetchCategories();
   }
 
   filterCards() {
@@ -192,8 +205,7 @@ export class ShopComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   clearCategoryFilters() {
-    this.selectedCategories = [];
-    this.applyFilters();
+    this.handleCategorySelectionChange([]);
   }
 
   onCategoriesChange() {
@@ -242,6 +254,7 @@ export class ShopComponent implements OnInit, AfterViewInit, OnDestroy {
     this.backendPage = 1;
     this.backendTotalPages = 0;
     this.allBackendLoaded = false;
+    this.productsById.clear();
     this.loadProducts();
   }
 
@@ -272,6 +285,7 @@ export class ShopComponent implements OnInit, AfterViewInit, OnDestroy {
     this.backendTotalPages = state.backendTotalPages || 0;
     this.allBackendLoaded = !!state.allBackendLoaded;
     this.loadingBackend = false;
+    this.rebuildProductsIndex();
   }
 
   private normalizeGender(value: any): string {
@@ -302,12 +316,22 @@ export class ShopComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   openCategoriesFilter(): void {
+    if (!this.categories.length) {
+      this.fetchCategories(() => this.showCategoriesFilterDialog());
+      return;
+    }
+    this.showCategoriesFilterDialog();
+  }
+
+  private showCategoriesFilterDialog(): void {
     const dialogData: CategoriesFilterData = {
       allCategories: this.categories.map((c) => c.name),
       selectedCategories: [...this.selectedCategories],
+      onSelectionChange: (selection) =>
+        this.handleCategorySelectionChange(selection || []),
     };
 
-    const dialogRef = this.dialog.open(CategoriesFilterDialogComponent, {
+    this.dialog.open(CategoriesFilterDialogComponent, {
       data: dialogData,
       width: '360px',
       maxWidth: '90vw',
@@ -316,17 +340,107 @@ export class ShopComponent implements OnInit, AfterViewInit, OnDestroy {
       autoFocus: false,
       panelClass: ['filter-sidenav-dialog'],
     });
+  }
 
-    dialogRef.afterClosed().subscribe((result) => {
-      if (result !== undefined) {
-        this.selectedCategories = dialogData.selectedCategories;
-        this.resetAndReload();
-      }
+  private fetchCategories(after?: () => void) {
+    if (after) {
+      this.categoryFetchCallbacks.push(after);
+    }
+
+    if (this.loadingCategories) {
+      return;
+    }
+
+    this.loadingCategories = true;
+    this.categoryApi.getCategories().subscribe({
+      next: (cats) => {
+        this.categories = this.normalizeCategories(cats);
+      },
+      error: () => {
+        this.categories = [];
+        this.loadingCategories = false;
+        this.flushCategoryFetchCallbacks();
+      },
+      complete: () => {
+        this.loadingCategories = false;
+        this.flushCategoryFetchCallbacks();
+      },
     });
   }
 
+  private flushCategoryFetchCallbacks() {
+    if (!this.categoryFetchCallbacks.length) {
+      return;
+    }
+
+    const callbacks = [...this.categoryFetchCallbacks];
+    this.categoryFetchCallbacks.length = 0;
+    callbacks.forEach((cb) => cb());
+  }
+
+  private handleCategorySelectionChange(nextSelection: string[]) {
+    const normalized = this.normalizeSelection(nextSelection);
+    if (!this.hasCategorySelectionChanged(normalized)) {
+      return;
+    }
+
+    this.selectedCategories = normalized;
+    this.resetAndReload();
+  }
+
+  private normalizeSelection(selection: string[]): string[] {
+    if (!Array.isArray(selection) || !selection.length) {
+      return [];
+    }
+
+    return selection
+      .map((name) => (name || '').trim())
+      .filter((name) => !!name)
+      .filter((value, index, self) => self.indexOf(value) === index)
+      .sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
+  }
+
+  private hasCategorySelectionChanged(next: string[]): boolean {
+    if (next.length !== this.selectedCategories.length) {
+      return true;
+    }
+
+    const currentSorted = [...this.selectedCategories].sort((a, b) =>
+      a.localeCompare(b, 'es', { sensitivity: 'base' })
+    );
+
+    return next.some((value, index) => value !== currentSorted[index]);
+  }
+
+  private normalizeCategories(cats: BackendCategory[] | null | undefined): BackendCategory[] {
+    if (!cats?.length) {
+      return [];
+    }
+
+    const byName = new Map<string, BackendCategory>();
+    cats.forEach((cat) => {
+      const rawName = cat?.name?.trim();
+      if (!rawName) {
+        return;
+      }
+      const isFirst = !byName.has(rawName);
+      if (isFirst) {
+        byName.set(rawName, { ...cat, name: rawName });
+      }
+    });
+
+    return Array.from(byName.values()).sort((a, b) =>
+      (a.name || '').localeCompare(b.name || '', 'es', { sensitivity: 'base' })
+    );
+  }
+
   openProductDetails(product: any) {
-    const pid = product.id || product._id;
+    const pid = product.id;
+    if (!pid) {
+      return;
+    }
+    this.productsById.set(pid, product);
+    this.openProductDialog(product);
     // Navega sólo con query param para evitar recrear el componente y mantener el scroll
     this.router.navigate([], {
       relativeTo: this.route,
@@ -340,50 +454,91 @@ export class ShopComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private handleProductParam(id: string | null) {
-    if (id && !this.productDialogRef) {
-      this.productApi.getProductById(id).subscribe({
-        next: (p) => {
-          const mapped = this.mapBackendProduct(p);
-          const vendor = mapped.vendorMeta || (mapped.vendorId ? { id: mapped.vendorId, name: 'Vendedor', logoPath: null } : undefined);
-          this.productDialogRef = this.dialog.open(ProductDetailsComponent, {
-            data: { product: mapped, vendor },
-            panelClass: ['product-details-dialog'],
-            maxWidth: '100vw',
-            width: '100vw',
-            height: '100vh',
-            autoFocus: false,
-            restoreFocus: false,
-            disableClose: false,
-          });
-          this.productDialogRef.afterClosed().subscribe((nextId?: string) => {
-            this.productDialogRef = null;
-
-            if (nextId) {
-              // Reabrir directamente el siguiente producto
-              this.handleProductParam(nextId);
-              return;
-            }
-
-            const currentParam = this.route.snapshot.paramMap.get('id');
-            const currentQuery = this.route.snapshot.queryParamMap.get('product');
-            if (currentParam) {
-              this.router.navigate(['/']);
-            } else if (currentQuery) {
-              this.router.navigate([], {
-                relativeTo: this.route,
-                queryParams: { product: null },
-                queryParamsHandling: 'merge',
-              });
-            }
-          });
-        },
-        error: (err) => console.error('Error cargando producto', err),
-      });
+    if (id) {
+      if (this.productDialogRef) {
+        return;
+      }
+      const cached = this.productsById.get(id);
+      if (cached) {
+        this.openProductDialog(cached);
+      } else {
+        this.pendingProductId = id;
+        this.resolvePendingProduct();
+      }
+      return;
     }
 
-    if (!id && this.productDialogRef) {
+    this.pendingProductId = null;
+    if (this.productDialogRef) {
       this.productDialogRef.close();
       this.productDialogRef = null;
     }
+  }
+
+  private openProductDialog(product: any) {
+    if (this.productDialogRef) {
+      return;
+    }
+    const pid = product?.id;
+    if (!pid) {
+      return;
+    }
+    this.pendingProductId = null;
+    const vendor = product.vendorMeta || (product.vendorId ? { id: product.vendorId, name: 'Vendedor', logoPath: null } : undefined);
+    this.productDialogRef = this.dialog.open(ProductDetailsComponent, {
+      data: { product, vendor },
+      panelClass: ['product-details-dialog'],
+      maxWidth: '100vw',
+      width: '100vw',
+      height: '100vh',
+      autoFocus: false,
+      restoreFocus: false,
+      disableClose: false,
+    });
+    this.productDialogRef.afterClosed().subscribe(() => {
+      this.productDialogRef = null;
+
+      const currentParam = this.route.snapshot.paramMap.get('id');
+      const currentQuery = this.route.snapshot.queryParamMap.get('product');
+      if (currentParam) {
+        this.router.navigate(['/']);
+      } else if (currentQuery) {
+        this.router.navigate([], {
+          relativeTo: this.route,
+          queryParams: { product: null },
+          queryParamsHandling: 'merge',
+        });
+      }
+    });
+  }
+
+  private resolvePendingProduct() {
+    if (!this.pendingProductId) {
+      return;
+    }
+    const cached = this.productsById.get(this.pendingProductId);
+    if (cached) {
+      this.openProductDialog(cached);
+      this.pendingProductId = null;
+      return;
+    }
+    if (!this.loadingBackend && !this.allBackendLoaded) {
+      this.loadProducts();
+      return;
+    }
+    if (this.allBackendLoaded) {
+      console.warn('Producto no disponible para mostrar en modal:', this.pendingProductId);
+      this.pendingProductId = null;
+    }
+  }
+
+  private rebuildProductsIndex() {
+    this.productsById.clear();
+    this.products.forEach((product) => {
+      const pid = product?.id;
+      if (pid) {
+        this.productsById.set(pid, product);
+      }
+    });
   }
 }
