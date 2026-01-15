@@ -153,8 +153,11 @@ export class ProductDetailsComponent implements AfterViewInit {
       } else {
         // Intentar derivar vendor desde el producto (vendorMeta o vendorId)
         const prod = this.product as any;
-        const vendorObj = prod?.vendorMeta || (typeof prod?.vendorId === 'object' ? prod.vendorId : undefined);
-        const vendorId = typeof prod?.vendorId === 'string' ? prod.vendorId : vendorObj?._id;
+        const vendorObj =
+          prod?.vendorMeta ||
+          (typeof prod?.vendorId === 'object' ? prod.vendorId : undefined);
+        const vendorId =
+          typeof prod?.vendorId === 'string' ? prod.vendorId : vendorObj?._id;
         if (vendorObj) {
           this.vendor = {
             id: vendorId,
@@ -166,7 +169,11 @@ export class ProductDetailsComponent implements AfterViewInit {
             socials: (vendorObj as any).socials,
           } as any;
         } else if (vendorId) {
-          this.vendor = { id: vendorId, name: 'Vendedor', logoPath: null } as any;
+          this.vendor = {
+            id: vendorId,
+            name: 'Vendedor',
+            logoPath: null,
+          } as any;
         }
       }
       this.buildSlides(this.product);
@@ -372,10 +379,16 @@ export class ProductDetailsComponent implements AfterViewInit {
     // Asegurar vendor - intentar derivarlo si falta
     if (!this.vendor && this.product) {
       const prod = this.product as any;
-      const vobj = prod.vendorMeta || (typeof prod.vendorId === 'object' ? prod.vendorId : undefined);
+      const vobj =
+        prod.vendorMeta ||
+        (typeof prod.vendorId === 'object' ? prod.vendorId : undefined);
       const vid = typeof prod.vendorId === 'string' ? prod.vendorId : vobj?._id;
       if (vobj) {
-        this.vendor = { id: vid, name: vobj.name || 'Vendedor', logoPath: vobj.logoPath } as any;
+        this.vendor = {
+          id: vid,
+          name: vobj.name || 'Vendedor',
+          logoPath: vobj.logoPath,
+        } as any;
       } else if (vid) {
         this.vendor = { id: vid, name: 'Vendedor', logoPath: null } as any;
       }
@@ -515,21 +528,32 @@ export class ProductDetailsComponent implements AfterViewInit {
       return;
     }
     this.relatedLoadError = null;
-    console.log('[RELATED] loading related for category=', category, 'productId=', product?.id || product?._id);
-    this.productApi.getProducts({ page: 1, limit: this.relatedMax, categories: [category] }).subscribe({
-      next: (res) => {
-        console.log('[RELATED] response', res);
-        const mapped = (res.products || []).map((p) => this.mapBackendProduct(p));
-        const currentId = this.product?.id || this.product?._id || null;
-        this.relatedProducts = mapped.filter((p) => (p.id || (p as any)._id) !== currentId).slice(0, this.relatedMax);
-        if (!this.relatedProducts.length) this.relatedLoadError = 'empty';
-      },
-      error: (err) => {
-        console.error('Error cargando relacionados', err);
-        this.relatedProducts = [];
-        this.relatedLoadError = 'error';
-      },
-    });
+    console.log(
+      '[RELATED] loading related for category=',
+      category,
+      'productId=',
+      product?.id || product?._id
+    );
+    this.productApi
+      .getProducts({ page: 1, limit: this.relatedMax, categories: [category] })
+      .subscribe({
+        next: (res) => {
+          console.log('[RELATED] response', res);
+          const mapped = (res.products || []).map((p) =>
+            this.mapBackendProduct(p)
+          );
+          const currentId = this.product?.id || this.product?._id || null;
+          this.relatedProducts = mapped
+            .filter((p) => (p.id || (p as any)._id) !== currentId)
+            .slice(0, this.relatedMax);
+          if (!this.relatedProducts.length) this.relatedLoadError = 'empty';
+        },
+        error: (err) => {
+          console.error('Error cargando relacionados', err);
+          this.relatedProducts = [];
+          this.relatedLoadError = 'error';
+        },
+      });
   }
 
   toggleSize(size: string) {
@@ -553,7 +577,9 @@ export class ProductDetailsComponent implements AfterViewInit {
       // Reemplazar el producto actual en el mismo diálogo (no apilar diálogos)
       this.applyProduct(this.mapBackendProduct(p), pid);
       // Si el asociado vendor viene en el objeto p, actualizarlo
-      const v = p.vendorMeta || (typeof p.vendorId === 'object' ? p.vendorId : undefined);
+      const v =
+        p.vendorMeta ||
+        (typeof p.vendorId === 'object' ? p.vendorId : undefined);
       if (v) {
         this.vendor = {
           id: typeof p.vendorId === 'string' ? p.vendorId : v._id,
