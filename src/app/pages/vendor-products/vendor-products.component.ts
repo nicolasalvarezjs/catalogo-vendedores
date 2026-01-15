@@ -1,12 +1,12 @@
 import { Component, Input, OnInit, HostListener } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, NgIf, NgForOf } from '@angular/common';
 import { ProductCatalogService } from '../../services/product.service';
 import { Product } from '../../models/product.model';
 
 @Component({
   selector: 'app-vendor-products',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, NgIf, NgForOf],
   template: `
     <h2 *ngIf="vendorName">Productos de {{ vendorName }}</h2>
     <div class="products-grid" *ngIf="products.length">

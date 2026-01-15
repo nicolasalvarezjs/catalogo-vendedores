@@ -1,27 +1,37 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnDestroy, OnInit, AfterViewInit, inject } from '@angular/core';
+import {
+  Component,
+  OnDestroy,
+  OnInit,
+  AfterViewInit,
+  inject,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { IconModule } from 'src/app/icon/icon.module';
 import { MaterialModule } from 'src/app/material.module';
 import { Router, ActivatedRoute } from '@angular/router';
 import { combineLatest } from 'rxjs';
-import { CategoriesFilterDialogComponent, CategoriesFilterData } from './categories-filter-dialog.component';
+import {
+  CategoriesFilterDialogComponent,
+  CategoriesFilterData,
+} from './categories-filter-dialog.component';
 import { CartDialogComponent } from './cart-dialog.component';
 import { CartService } from 'src/app/services/apps/cart/cart.service';
-import { ProductApiService, BackendProduct } from 'src/app/services/api/product-api.service';
-import { CategoryApiService, BackendCategory } from 'src/app/services/api/category-api.service';
+import {
+  ProductApiService,
+  BackendProduct,
+} from 'src/app/services/api/product-api.service';
+import {
+  CategoryApiService,
+  BackendCategory,
+} from 'src/app/services/api/category-api.service';
 import { ShopStateService } from './shop-state.service';
 import { ProductDetailsComponent } from '../product-details/product-details.component';
 
 @Component({
   selector: 'app-shop',
-  imports: [
-    MaterialModule,
-    IconModule,
-    CommonModule,
-    FormsModule,
-  ],
+  imports: [MaterialModule, IconModule, CommonModule, FormsModule],
   templateUrl: './shop.component.html',
   styleUrl: './shop.component.scss',
 })
@@ -111,7 +121,8 @@ export class ShopComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private mapBackendProduct(p: BackendProduct) {
     const vendorObj = typeof p.vendorId === 'object' ? p.vendorId : undefined;
-    const vendorId = typeof p.vendorId === 'string' ? p.vendorId : vendorObj?._id;
+    const vendorId =
+      typeof p.vendorId === 'string' ? p.vendorId : vendorObj?._id;
     return {
       id: p._id,
       product_name: p.product_name,
@@ -412,7 +423,9 @@ export class ShopComponent implements OnInit, AfterViewInit, OnDestroy {
     return next.some((value, index) => value !== currentSorted[index]);
   }
 
-  private normalizeCategories(cats: BackendCategory[] | null | undefined): BackendCategory[] {
+  private normalizeCategories(
+    cats: BackendCategory[] | null | undefined
+  ): BackendCategory[] {
     if (!cats?.length) {
       return [];
     }
@@ -440,13 +453,8 @@ export class ShopComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
     this.productsById.set(pid, product);
+    // Abrir detalle como diálogo sin tocar la URL
     this.openProductDialog(product);
-    // Navega sólo con query param para evitar recrear el componente y mantener el scroll
-    this.router.navigate([], {
-      relativeTo: this.route,
-      queryParams: { product: pid },
-      queryParamsHandling: 'merge',
-    });
   }
 
   navigateToEmpresa() {
@@ -484,7 +492,11 @@ export class ShopComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
     this.pendingProductId = null;
-    const vendor = product.vendorMeta || (product.vendorId ? { id: product.vendorId, name: 'Vendedor', logoPath: null } : undefined);
+    const vendor =
+      product.vendorMeta ||
+      (product.vendorId
+        ? { id: product.vendorId, name: 'Vendedor', logoPath: null }
+        : undefined);
     this.productDialogRef = this.dialog.open(ProductDetailsComponent, {
       data: { product, vendor },
       panelClass: ['product-details-dialog'],
@@ -527,7 +539,10 @@ export class ShopComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
     if (this.allBackendLoaded) {
-      console.warn('Producto no disponible para mostrar en modal:', this.pendingProductId);
+      console.warn(
+        'Producto no disponible para mostrar en modal:',
+        this.pendingProductId
+      );
       this.pendingProductId = null;
     }
   }

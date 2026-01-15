@@ -1,174 +1,101 @@
-<div
-  class="details-navbar-fixed d-flex align-items-center gap-12 p-y-12 p-x-16 b-1 bg-white"
->
-  <button
-    mat-icon-button
-    class="bg-primary text-white"
-    (click)="getBack()"
-    aria-label="Volver"
-  >
+<div class="details-navbar-fixed d-flex align-items-center gap-12 p-y-12 p-x-16 b-1 bg-white">
+  <button mat-icon-button class="bg-primary text-white" (click)="getBack()" aria-label="Volver">
     <mat-icon>arrow_back</mat-icon>
   </button>
-  <!-- Título pequeño removido: usaremos solo el título grande dentro de la tarjeta -->
-  <ng-template #loadingTitle
-    ><span class="f-s-14 text-muted">Cargando...</span></ng-template
-  >
+  <ng-template #loadingTitle><span class="f-s-14 text-muted">Cargando...</span></ng-template>
 </div>
 <div class="details-wrapper p-16 p-sm-0 m-t-navbar-details">
-  @if(loading){
-  <div class="skeleton-wrapper">
-    <div class="row">
-      <div class="col-lg-6 m-b-20">
-        <div class="skeleton skeleton-img w-100"></div>
+  <ng-container *ngIf="loading">
+    <div class="skeleton-wrapper">
+      <div class="row">
+        <div class="col-lg-6 m-b-20">
+          <div class="skeleton skeleton-img w-100"></div>
+        </div>
+        <div class="col-lg-6">
+          <div class="skeleton skeleton-badge m-b-12"></div>
+          <div class="skeleton skeleton-title m-b-16"></div>
+          <div class="skeleton skeleton-text m-b-8"></div>
+          <div class="skeleton skeleton-text m-b-8 w-80"></div>
+          <div class="skeleton skeleton-price m-b-24"></div>
+          <div class="d-flex gap-10 m-b-24">
+            <div class="skeleton skeleton-btn"></div>
+            <div class="skeleton skeleton-btn"></div>
+          </div>
+        </div>
       </div>
-      <div class="col-lg-6">
-        <div class="skeleton skeleton-badge m-b-12"></div>
-        <div class="skeleton skeleton-title m-b-16"></div>
-        <div class="skeleton skeleton-text m-b-8"></div>
-        <div class="skeleton skeleton-text m-b-8 w-80"></div>
-        <div class="skeleton skeleton-price m-b-24"></div>
-        <div class="d-flex gap-10 m-b-24">
-          <div class="skeleton skeleton-btn"></div>
-          <div class="skeleton skeleton-btn"></div>
+      <div class="skeleton skeleton-tab m-b-24"></div>
+      <div class="row">
+        <div class="col-sm-6 col-lg-3 m-b-16 p-0" *ngFor="let i of skeletonIndices">
+          <div class="skeleton skeleton-card w-100"></div>
         </div>
       </div>
     </div>
-    <div class="skeleton skeleton-tab m-b-24"></div>
-    <div class="row">
-      @for(i of [1,2,3,4]; track i){
-      <div class="col-sm-6 col-lg-3 m-b-16 p-0">
-        <div class="skeleton skeleton-card w-100"></div>
-      </div>
-      }
-    </div>
-  </div>
-  } @else {
-  <!-- Botón volver reemplazado por navbar fijo -->
-  }
+  </ng-container>
+  <ng-container *ngIf="!loading">
+    <!-- Botón volver reemplazado por navbar fijo -->
+  </ng-container>
   <mat-card class="cardWithShadow b-1 rounded p-30 details-card">
     <div class="row">
-      <div
-        class="col-lg-1 m-r-20 thumbs-column"
-        role="tablist"
-        aria-label="Galería de imágenes del producto"
-        *ngIf="slides.length > 0"
-      >
-        @for(slide of slides; let i = $index; track slide.id){
-        <button
-          type="button"
-          class="thumb-btn p-0"
-          (click)="goToSlide(i)"
-          [attr.aria-label]="'Imagen ' + (i + 1)"
-          role="tab"
-          [attr.aria-selected]="i === activeIndex"
-          [attr.data-index]="i"
-          [attr.data-active]="i === activeIndex ? 'true' : null"
-        >
+      <div class="col-lg-1 m-r-20 thumbs-column" role="tablist" aria-label="Galería de imágenes del producto" *ngIf="slides.length > 0">
+        <button type="button" class="thumb-btn p-0" *ngFor="let slide of slides; let i = index; trackBy: trackById" (click)="goToSlide(i)" [attr.aria-label]="'Imagen ' + (i + 1)" role="tab" [attr.aria-selected]="i === activeIndex" [attr.data-index]="i" [attr.data-active]="i === activeIndex ? 'true' : null">
           <div class="thumb-wrapper" [class.active]="i === activeIndex">
-            <img
-              [src]="slide.imgUrl"
-              [alt]="slide.altText"
-              class="thumb-img"
-              [attr.data-index]="i"
-              [attr.data-active]="i === activeIndex ? 'true' : null"
-            />
+            <img [src]="slide.imgUrl" [alt]="slide.altText" class="thumb-img" [attr.data-index]="i" [attr.data-active]="i === activeIndex ? 'true' : null" />
           </div>
         </button>
-        }
       </div>
       <div class="col-lg-6">
-        @if(slides.length > 0){
-        <owl-carousel-o [options]="customOptions" class="product-carousel">
-          @for(slide of slides; track slide.id){
-          <ng-template carouselSlide [id]="slide.id">
-            <img
-              [src]="slide.imgUrl"
-              [alt]="slide.altText"
-              class="rounded w-100 product-media-img"
-              loading="lazy"
-              decoding="async"
-              (error)="slide.imgUrl = 'assets/images/products/no-image.png'"
-              [class.active]="activeIndex === +slide.id"
-              [attr.data-index]="slide.id"
-              [attr.data-active]="activeIndex === +slide.id ? 'true' : null"
-            />
-          </ng-template>
-          }
-        </owl-carousel-o>
-        }@else {
-        <div class="product-media-single">
-          <img
-            [src]="product?.imagePath || 'assets/images/products/no-image.png'"
-            alt="producto"
-            class="rounded w-100 product-media-img"
-            loading="lazy"
-            decoding="async"
-            (error)="onImgError($event)"
-          />
-        </div>
-        }
+        <ng-container *ngIf="slides.length > 0">
+          <owl-carousel-o [options]="customOptions" class="product-carousel">
+            <ng-template carouselSlide *ngFor="let slide of slides" [id]="slide.id">
+              <img [src]="slide.imgUrl" [alt]="slide.altText" class="rounded w-100 product-media-img" loading="lazy" decoding="async" (error)="slide.imgUrl = 'assets/images/products/no-image.png'" [class.active]="activeIndex === +slide.id" [attr.data-index]="slide.id" [attr.data-active]="activeIndex === +slide.id ? 'true' : null" />
+            </ng-template>
+          </owl-carousel-o>
+        </ng-container>
+        <ng-container *ngIf="!slides.length">
+          <div class="product-media-single">
+            <img [src]="product?.imagePath || 'assets/images/products/no-image.png'" alt="producto" class="rounded w-100 product-media-img" loading="lazy" decoding="async" (error)="onImgError($event)" />
+          </div>
+        </ng-container>
       </div>
       <div class="col-lg-4">
         <!-- Chips de estado y categoría removidos temporalmente -->
         <h3 class="m-t-10 f-w-600">{{ product?.product_name }}</h3>
         <div class="f-s-14 m-t-8 wholesale-extra">
-          @if(product?.talles){
-          <div class="line d-flex align-items-center gap-4 m-b-4">
-            <i-tabler name="ruler" class="icon-14 text-muted"></i-tabler
-            ><strong>Talles:</strong>
-            <span class="talles-badge">{{ product?.talles }}</span>
-          </div>
-          } @if(product?.generos?.length){
-          <div class="line d-flex align-items-center gap-4 m-b-4">
-            <i-tabler name="users" class="icon-14 text-muted"></i-tabler>
-            <strong>Géneros:</strong>
-            <span class="chip-wrapper d-flex flex-wrap gap-4">
-              @for(g of product?.generos; track g){
-              <span class="category-chip genero-chip">{{ g }}</span>
-              }
-            </span>
-          </div>
-          } @if(product?.categoria){
-          <div class="line d-flex align-items-center gap-4">
-            <i-tabler name="tag" class="icon-14 text-muted"></i-tabler
-            ><strong>Categoría:</strong>
-            <span class="category-chip">{{ product?.categoria }}</span>
-          </div>
-          }
+          <ng-container *ngIf="product?.talles">
+            <div class="line d-flex align-items-center gap-4 m-b-4">
+              <i-tabler name="ruler" class="icon-14 text-muted"></i-tabler><strong>Talles:</strong>
+              <span class="talles-badge">{{ product?.talles }}</span>
+            </div>
+          </ng-container>
+          <ng-container *ngIf="product?.generos?.length">
+            <div class="line d-flex align-items-center gap-4 m-b-4">
+              <i-tabler name="users" class="icon-14 text-muted"></i-tabler>
+              <strong>Géneros:</strong>
+              <span class="chip-wrapper d-flex flex-wrap gap-4">
+                <span class="category-chip genero-chip" *ngFor="let g of product?.generos">{{ g }}</span>
+              </span>
+            </div>
+          </ng-container>
+          <ng-container *ngIf="product?.categoria">
+            <div class="line d-flex align-items-center gap-4">
+              <i-tabler name="tag" class="icon-14 text-muted"></i-tabler><strong>Categoría:</strong>
+              <span class="category-chip">{{ product?.categoria }}</span>
+            </div>
+          </ng-container>
         </div>
-        @if(product?.salesType === 'unidad' && product?.talles){
-        <div class="sizes-select-block m-t-4 m-b-16">
-          <label class="f-s-14 f-w-600 d-block m-b-6">Seleccioná talles</label>
-          <div class="sizes-chips d-flex flex-wrap gap-6">
-            @for(size of sizesAvailable; track size){
-            <button
-              type="button"
-              class="size-chip"
-              [class.selected]="isSizeSelected(size.trim())"
-              (click)="toggleSize(size.trim())"
-              [attr.aria-pressed]="isSizeSelected(size.trim())"
-              [title]="size.trim()"
-            >
-              <span>{{ size.trim() }}</span>
-            </button>
-            }
+        <ng-container *ngIf="product?.salesType === 'unidad' && product?.talles">
+          <div class="sizes-select-block m-t-4 m-b-16">
+            <label class="f-s-14 f-w-600 d-block m-b-6">Seleccioná talles</label>
+            <div class="sizes-chips d-flex flex-wrap gap-6">
+              <button type="button" *ngFor="let size of sizesAvailable" class="size-chip" [class.selected]="isSizeSelected(size.trim())" (click)="toggleSize(size.trim())" [attr.aria-pressed]="isSizeSelected(size.trim())" [title]="size.trim()">
+                <span>{{ size.trim() }}</span>
+              </button>
+            </div>
+            <div class="f-s-12 text-muted m-t-4" *ngIf="selectedSizes.length === 0">Elegí al menos un talle.</div>
+            <div class="f-s-12 m-t-4" *ngIf="selectedSizes.length > 0">Talles seleccionados: <strong>{{ selectedSizes.join(', ') }}</strong></div>
           </div>
-          <div
-            class="f-s-12 text-muted m-t-4"
-            *ngIf="selectedSizes.length === 0"
-          >
-            Elegí al menos un talle.
-          </div>
-          <div class="f-s-12 m-t-4" *ngIf="selectedSizes.length > 0">
-            Talles seleccionados:
-            <strong>{{ selectedSizes.join(", ") }}</strong>
-          </div>
-        </div>
-        }
-        <div
-          class="d-flex align-items-center price-block m-t-4"
-          *ngIf="product as p"
-        >
+        </ng-container>
+        <div class="d-flex align-items-center price-block m-t-4" *ngIf="product as p">
           <ng-container
             *ngIf="
               p.dealPrice !== undefined &&
@@ -297,5 +224,29 @@
     -->
     </mat-tab-group>
   </mat-card>
-
+  <mat-card class="cardWithShadow b-1 rounded p-30 details-card">
+    <h4 class="m-b-16">Más productos</h4>
+    <div class="f-s-12 text-muted m-b-8">Debug: estado={{ relatedLoadError || 'ok' }} — encontrados={{ relatedProducts.length }}</div>
+    <div class="m-b-8">
+      <button mat-stroked-button color="primary" (click)="refreshRelated()">Reintentar carga</button>
+    </div>
+    <div *ngIf="!relatedProducts || relatedProducts.length === 0" class="f-s-14 text-muted m-b-12">
+      <div>No se encontraron productos relacionados para la categoría: <strong>{{ product?.categoria || '—' }}</strong></div>
+      <div *ngIf="relatedLoadError" class="f-s-12 text-danger">Estado: {{ relatedLoadError }}</div>
+    </div>
+    <div class="row" *ngIf="relatedProducts && relatedProducts.length">
+      <div class="col-sm-6 col-lg-3 m-b-16" *ngFor="let rp of relatedProducts; trackBy: trackById">
+        <mat-card class="cardWithShadow b-1 rounded related-card" (click)="openRelatedProduct(rp)" role="button" tabindex="0">
+          <div class="related-img">
+            <img [src]="rp.imagePath || 'assets/images/products/no-image.png'" alt="{{ rp.product_name }}" class="w-100 rounded" (error)="onImgError($event)" />
+          </div>
+          <div class="p-8">
+            <h6 class="m-0 f-s-14">{{ rp.product_name }}</h6>
+            <div class="f-s-13 text-muted">{{ rp.categoria }}</div>
+            <div class="f-s-14 f-w-600 m-t-8">{{ rp.base_price | monedaARS }}</div>
+          </div>
+        </mat-card>
+      </div>
+    </div>
+  </mat-card>
 </div>

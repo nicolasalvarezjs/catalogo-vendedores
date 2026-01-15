@@ -107,6 +107,14 @@ export class ProductDetailsComponent implements AfterViewInit {
   activeIndex = 0;
   vendor: DetailVendor | undefined;
   private currentProductId: string | null = null;
+  // Productos relacionados por categoría
+  relatedProducts: any[] = [];
+  relatedMax = 8;
+  relatedLoadError: string | null = null;
+  // Helper para skeletons en template
+  skeletonIndices: number[] = [1, 2, 3, 4];
+  // Placeholder ratings (no usado activamente, evita errores si plantilla lo referencia)
+  ratings: { label: number; value: number; count: number }[] = [];
   // TODO(Revisar futuro): distribución de ratings para pestaña de reseñas
   // ratings = [ { label: 1, value: 30, count: 485 }, { label: 2, value: 20, count: 215 }, { label: 3, value: 10, count: 110 }, { label: 4, value: 60, count: 620 }, { label: 5, value: 15, count: 160 } ];
 
@@ -127,7 +135,8 @@ export class ProductDetailsComponent implements AfterViewInit {
     if (this.dialogData?.product) {
       // Modal con producto ya cargado
       this.product = this.dialogData.product;
-      this.currentProductId = this.dialogData.product?.id || this.dialogData.product?._id || null;
+      this.currentProductId =
+        this.dialogData.product?.id || this.dialogData.product?._id || null;
       console.log('[DETAILS INIT] Producto recibido en dialog:', {
         id: this.product?._id,
         name: this.product?.product_name,
@@ -139,13 +148,35 @@ export class ProductDetailsComponent implements AfterViewInit {
         salesType: this.product?.salesType,
         minPurchase: this.product?.minPurchase,
       });
-      if (this.dialogData.vendor) this.vendor = this.dialogData.vendor;
+      if (this.dialogData.vendor) {
+        this.vendor = this.dialogData.vendor;
+      } else {
+        // Intentar derivar vendor desde el producto (vendorMeta o vendorId)
+        const prod = this.product as any;
+        const vendorObj = prod?.vendorMeta || (typeof prod?.vendorId === 'object' ? prod.vendorId : undefined);
+        const vendorId = typeof prod?.vendorId === 'string' ? prod.vendorId : vendorObj?._id;
+        if (vendorObj) {
+          this.vendor = {
+            id: vendorId,
+            name: vendorObj.name || 'Vendedor',
+            logoPath: (vendorObj as any).logoPath,
+            doesShipping: (vendorObj as any).doesShipping,
+            shippingDetail: (vendorObj as any).shippingDetail,
+            productDescription: (vendorObj as any).productDescription,
+            socials: (vendorObj as any).socials,
+          } as any;
+        } else if (vendorId) {
+          this.vendor = { id: vendorId, name: 'Vendedor', logoPath: null } as any;
+        }
+      }
       this.buildSlides(this.product);
       this.extractColors(this.product);
       // Ajustar cantidad inicial según minPurchase
       this.quantity = Math.max(this.quantity, this.minPurchase);
       this.initSizes();
       this.loading = false;
+      // Cargar productos relacionados inmediatamente al abrir el diálogo
+      this.loadRelatedProducts(this.product);
     } else {
       // Página normal: cargar por id desde backend
       this.route.paramMap.subscribe((params) => {
@@ -338,6 +369,18 @@ export class ProductDetailsComponent implements AfterViewInit {
   }
 
   addToCart() {
+    // Asegurar vendor - intentar derivarlo si falta
+    if (!this.vendor && this.product) {
+      const prod = this.product as any;
+      const vobj = prod.vendorMeta || (typeof prod.vendorId === 'object' ? prod.vendorId : undefined);
+      const vid = typeof prod.vendorId === 'string' ? prod.vendorId : vobj?._id;
+      if (vobj) {
+        this.vendor = { id: vid, name: vobj.name || 'Vendedor', logoPath: vobj.logoPath } as any;
+      } else if (vid) {
+        this.vendor = { id: vid, name: 'Vendedor', logoPath: null } as any;
+      }
+    }
+
     if (this.product && this.vendor) {
       console.log('ProductDetailsComponent.addToCart called with:', {
         product: this.product,
@@ -416,7 +459,8 @@ export class ProductDetailsComponent implements AfterViewInit {
     p: any
   ): Product & { id?: string; vendorMeta?: DetailVendor } {
     const vendorObj = typeof p.vendorId === 'object' ? p.vendorId : undefined;
-    const vendorId = typeof p.vendorId === 'string' ? p.vendorId : vendorObj?._id;
+    const vendorId =
+      typeof p.vendorId === 'string' ? p.vendorId : vendorObj?._id;
     return {
       ...p,
       id: p._id || p.id,
@@ -444,7 +488,8 @@ export class ProductDetailsComponent implements AfterViewInit {
     mapped: Product & { id?: string; vendorMeta?: DetailVendor },
     fallbackId?: string
   ) {
-    this.currentProductId = mapped.id || (mapped as any)._id || fallbackId || null;
+    this.currentProductId =
+      mapped.id || (mapped as any)._id || fallbackId || null;
     this.product = mapped;
     this.vendor = mapped.vendorMeta;
     this.selectedColorName = null;
@@ -453,9 +498,39 @@ export class ProductDetailsComponent implements AfterViewInit {
     this.extractColors(mapped);
     this.quantity = Math.max(1, this.minPurchase);
     this.initSizes();
+    // Cargar relacionados cuando se aplica el producto (página o diálogo)
+    this.loadRelatedProducts(this.product);
   }
 
-  
+  private loadRelatedProducts(product: any) {
+    if (!product) {
+      this.relatedProducts = [];
+      this.relatedLoadError = 'no product';
+      return;
+    }
+    const category = product?.categoria || null;
+    if (!category) {
+      this.relatedProducts = [];
+      this.relatedLoadError = 'no category';
+      return;
+    }
+    this.relatedLoadError = null;
+    console.log('[RELATED] loading related for category=', category, 'productId=', product?.id || product?._id);
+    this.productApi.getProducts({ page: 1, limit: this.relatedMax, categories: [category] }).subscribe({
+      next: (res) => {
+        console.log('[RELATED] response', res);
+        const mapped = (res.products || []).map((p) => this.mapBackendProduct(p));
+        const currentId = this.product?.id || this.product?._id || null;
+        this.relatedProducts = mapped.filter((p) => (p.id || (p as any)._id) !== currentId).slice(0, this.relatedMax);
+        if (!this.relatedProducts.length) this.relatedLoadError = 'empty';
+      },
+      error: (err) => {
+        console.error('Error cargando relacionados', err);
+        this.relatedProducts = [];
+        this.relatedLoadError = 'error';
+      },
+    });
+  }
 
   toggleSize(size: string) {
     if (!size) return;
@@ -469,5 +544,35 @@ export class ProductDetailsComponent implements AfterViewInit {
 
   isSizeSelected(size: string): boolean {
     return this.selectedSizes.includes(size);
+  }
+
+  openRelatedProduct(p: any) {
+    const pid = p?.id || p?._id;
+    if (!pid) return;
+    if (this.dialogRef) {
+      // Reemplazar el producto actual en el mismo diálogo (no apilar diálogos)
+      this.applyProduct(this.mapBackendProduct(p), pid);
+      // Si el asociado vendor viene en el objeto p, actualizarlo
+      const v = p.vendorMeta || (typeof p.vendorId === 'object' ? p.vendorId : undefined);
+      if (v) {
+        this.vendor = {
+          id: typeof p.vendorId === 'string' ? p.vendorId : v._id,
+          name: v.name || 'Vendedor',
+          logoPath: v.logoPath || null,
+          doesShipping: v.doesShipping,
+          shippingDetail: v.shippingDetail,
+          productDescription: v.productDescription,
+          socials: v.socials,
+        } as any;
+      }
+      // Recargar relacionados para la nueva categoría
+      this.loadRelatedProducts(this.product);
+    } else {
+      this.router.navigate(['product', pid]);
+    }
+  }
+
+  refreshRelated() {
+    this.loadRelatedProducts(this.product);
   }
 }
