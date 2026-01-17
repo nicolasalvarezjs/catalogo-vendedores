@@ -134,6 +134,10 @@ import { AuthService } from '../../services/auth.service';
         margin-top: 6px;
         font-size: 0.92rem;
       }
+      /* Evita zoom en inputs en iOS al asegurar 16px+ */
+      .panel .mat-mdc-input-element {
+        font-size: 16px;
+      }
       @media (max-width: 480px) {
         .panel {
           padding: 16px 14px 12px;

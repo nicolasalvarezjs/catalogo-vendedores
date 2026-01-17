@@ -55,7 +55,6 @@ import { CategoryApiService, BackendCategory } from '../../services/api/category
               <input
                 type="file"
                 accept="image/*"
-                capture="environment"
                 multiple
                 (change)="onFiles($event)"
                 [disabled]="uploading()"

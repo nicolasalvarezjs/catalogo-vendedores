@@ -8,6 +8,14 @@ body {
             touch-action: pan-y; // permite scroll vertical normal, bloquea gestos horizontales que generan rebote vertical
             -webkit-overflow-scrolling: touch;
         }
+
+/* Evita el zoom al enfocar inputs en iOS al forzar 16px+ */
+input,
+textarea,
+select,
+.mat-mdc-input-element {
+    font-size: 16px;
+}
         
         /* Evitar desplazamiento vertical mínimo al arrastrar horizontal en contenedores específicos */
         .no-bounce,
