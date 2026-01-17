@@ -319,40 +319,15 @@ export class CartDialogComponent {
     if (!this.cartItems || this.cartItems.length === 0) {
       return;
     }
-    const order = await this.createOrderFromCart(this.cartItems);
-    if (!order) return;
-    let message = `N° pedido: ${
-      order.orderNumber || ''
-    }\nHola, quiero finalizar mi compra.\n\n`;
-    // Construir mensaje usando los datos legibles del carrito (nombres, vendorName, precios)
+    // Mensaje fijo para número 1151030450
+    let message = 'Quiero realizar la compra de:\n\n';
     this.cartItems.forEach((ci) => {
-      const productName =
-        ci.product?.product_name || ci.product?.name || 'Producto sin nombre';
-      const vendorName = ci.vendorName || ci.vendorId || 'Vendedor sin nombre';
-      const price = ci.product?.dealPrice || ci.product?.base_price || 0;
-      const colorPart = ci.colorName ? `Color: ${ci.colorName}` : '';
-      const sizesPart =
-        ci.sizes && ci.sizes.length ? `Talles: ${ci.sizes.join(', ')}` : '';
-      message += `• Producto: ${productName}\n`;
-      message += `  Vendedor: ${vendorName}\n`;
-      if (colorPart) message += `  ${colorPart}\n`;
-      if (sizesPart) message += `  ${sizesPart}\n`;
-      if (price) message += `  Precio: $${price}\n`;
-      message += '\n';
+      const productName = ci.product?.product_name || ci.product?.name || 'Producto sin nombre';
+      message += `- ${productName}\n`;
     });
-    // Usar el total ya calculado en el servicio (más confiable)
-    message += `\nTotal: $${this.total}\n`;
     const encodedMessage = encodeURIComponent(message);
-    const rawNumber: string | undefined = this.data.vendor?.socials?.whatsapp;
-    const cleaned = rawNumber ? rawNumber.replace(/[^0-9]/g, '') : '';
-    const sanitizedNumber = cleaned.startsWith('54')
-      ? cleaned
-      : cleaned
-      ? '54' + cleaned
-      : '';
-    const whatsappUrl = sanitizedNumber
-      ? `https://wa.me/${sanitizedNumber}?text=${encodedMessage}`
-      : `https://wa.me/?text=${encodedMessage}`;
+    const targetNumber = '541151030450'; // Argentina +54 prefijo
+    const whatsappUrl = `https://wa.me/${targetNumber}?text=${encodedMessage}`;
     window.open(whatsappUrl, '_blank');
   }
 

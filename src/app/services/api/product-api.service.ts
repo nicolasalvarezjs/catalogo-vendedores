@@ -5,7 +5,7 @@ import { API_BASE_URL, buildQuery } from '../../api.config';
 
 export interface BackendProduct {
   _id: string;
-  vendorId: string | { _id?: string; name?: string };
+  vendorId?: string | { _id?: string; name?: string } | null;
   product_name: string;
   categoria?: string;
   generos?: string[];
@@ -36,6 +36,18 @@ export interface BackendProductPageResponse {
 
 export interface BackendProductSingleResponse extends BackendProduct {}
 
+export interface CreateProductPayload {
+  product_name: string;
+  categoria: string;
+  generos: string[];
+  base_price: number;
+  description?: string;
+  images?: string[];
+  salesType?: string;
+  minPurchase?: number;
+  colors?: { name: string; hex: string }[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class ProductApiService {
   private baseUrl = `${API_BASE_URL}/product`;
@@ -54,5 +66,17 @@ export class ProductApiService {
 
   getProductById(id: string): Observable<BackendProductSingleResponse> {
     return this.http.get<BackendProductSingleResponse>(`${this.baseUrl}/${id}`);
+  }
+
+  createProduct(payload: CreateProductPayload) {
+    return this.http.post(`${this.baseUrl}/create`, payload);
+  }
+
+  deleteProduct(id: string) {
+    return this.http.delete(`${this.baseUrl}/delete/${id}`);
+  }
+
+  updateProduct(id: string, payload: Partial<CreateProductPayload>) {
+    return this.http.put(`${this.baseUrl}/update/${id}`, payload);
   }
 }

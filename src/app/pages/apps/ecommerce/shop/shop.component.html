@@ -17,6 +17,9 @@
         </div>
 
         <div class="navbar-actions d-flex align-items-center gap-6">
+          <button *ngIf="isLogged" mat-stroked-button color="primary" (click)="goAdmin()">
+            Ir a admin
+          </button>
           <button mat-icon-button class="wishlist-btn" matTooltip="Favoritos">
             <mat-icon>favorite_border</mat-icon>
           </button>

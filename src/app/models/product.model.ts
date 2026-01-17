@@ -1,6 +1,6 @@
 export interface Product {
   _id: string;
-  vendorId: string | { _id?: string; name?: string }; // populated vendor name may come
+  vendorId?: string | { _id?: string; name?: string } | null;
   titulo: string; // assuming from backend filter usage
   description?: string;
   categoria?: string;

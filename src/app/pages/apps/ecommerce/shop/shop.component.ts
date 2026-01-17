@@ -13,6 +13,7 @@ import { ProductApiService, BackendProduct } from 'src/app/services/api/product-
 import { CategoryApiService, BackendCategory } from 'src/app/services/api/category-api.service';
 import { ShopStateService } from './shop-state.service';
 import { ProductDetailsComponent } from '../product-details/product-details.component';
+import { AuthService } from 'src/app/services/auth.service';
 
 @Component({
   selector: 'app-shop',
@@ -33,6 +34,7 @@ export class ShopComponent implements OnInit, AfterViewInit, OnDestroy {
   private categoryApi = inject(CategoryApiService);
   private cartService = inject(CartService);
   private shopState = inject(ShopStateService);
+  private auth = inject(AuthService);
 
   private productDialogRef: any = null;
   private productsById = new Map<string, any>();
@@ -60,8 +62,12 @@ export class ShopComponent implements OnInit, AfterViewInit, OnDestroy {
     { label: 'Hombre', value: 'hombre' },
     { label: 'Niños', value: 'niños' },
   ];
+  isLogged = false;
 
   ngOnInit(): void {
+    this.isLogged = this.auth.isAuthenticated();
+    this.auth.authChanges().subscribe((state) => (this.isLogged = state));
+
     const cached = this.shopState.getState();
     if (cached) {
       this.restoreFromState(cached);
@@ -81,6 +87,10 @@ export class ShopComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     );
     window.addEventListener('scroll', this.onWindowScroll, { passive: true });
+  }
+
+  goAdmin() {
+    this.router.navigateByUrl('/admin');
   }
 
   ngAfterViewInit(): void {

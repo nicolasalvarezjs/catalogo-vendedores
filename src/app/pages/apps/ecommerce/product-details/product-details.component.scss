@@ -269,6 +269,17 @@
     background-color: var(--mat-sys-primary) !important;
   }
 }
+
+.admin-actions {
+  display: flex;
+  gap: 10px;
+  margin-left: 12px;
+  flex-wrap: wrap;
+
+  button {
+    height: 48px;
+  }
+}
 /* Responsive ajustes: tablet (<= 1199px) hacia abajo */
 @media (max-width: 1199px) {
   .details-wrapper {

@@ -223,6 +223,16 @@
               <span>Agregar al carrito</span>
             </div>
           </button>
+          @if (isAdmin) {
+          <div class="admin-actions">
+            <button mat-stroked-button color="primary" (click)="editProduct()">
+              Modificar
+            </button>
+            <button mat-stroked-button color="warn" (click)="confirmDelete()">
+              Eliminar
+            </button>
+          </div>
+          }
         </div>
       </div>
     </div>

@@ -27,6 +27,9 @@ import { CartService } from 'src/app/services/apps/cart/cart.service';
 import { ConfirmDialogComponent } from './confirm-dialog.component';
 import { ProductApiService } from 'src/app/services/api/product-api.service';
 import { Product } from 'src/app/models/product.model';
+import { CartDialogComponent } from '../shop/cart-dialog.component';
+import { AuthService } from 'src/app/services/auth.service';
+import { ProductCreateComponent } from '../../../admin/product-create.component';
 
 interface Slide {
   id: string;
@@ -60,6 +63,7 @@ export class ProductDetailsComponent implements AfterViewInit {
   @ViewChild(CarouselComponent) carousel?: CarouselComponent;
   private cartService = inject(CartService);
   private dialog = inject(MatDialog);
+  private auth = inject(AuthService);
   // Backend product shape minimal subset
   product: any | null = null;
   // Swatches derivadas del array de colores del producto
@@ -76,6 +80,7 @@ export class ProductDetailsComponent implements AfterViewInit {
   quantity: number = 1;
   toggleValue: any = null;
   selectedTabIndex = 0;
+  isAdmin = false;
   // Reglas de compra mínima para salesType 'unidad'
   get minPurchase(): number {
     const mp = this.product?.minPurchase;
@@ -106,6 +111,7 @@ export class ProductDetailsComponent implements AfterViewInit {
   slides: Slide[] = [];
   activeIndex = 0;
   vendor: DetailVendor | undefined;
+  private readonly defaultVendor: DetailVendor = { id: 'admin', name: 'Admin' } as DetailVendor;
   private currentProductId: string | null = null;
   // TODO(Revisar futuro): distribución de ratings para pestaña de reseñas
   // ratings = [ { label: 1, value: 30, count: 485 }, { label: 2, value: 20, count: 215 }, { label: 3, value: 10, count: 110 }, { label: 4, value: 60, count: 620 }, { label: 5, value: 15, count: 160 } ];
@@ -124,6 +130,10 @@ export class ProductDetailsComponent implements AfterViewInit {
     private dialogData: { product?: any; vendor?: Vendor } | null,
     @Optional() private dialogRef?: MatDialogRef<ProductDetailsComponent>
   ) {
+    this.isAdmin = this.auth.isAuthenticated();
+    this.auth.authChanges().subscribe((logged) => {
+      this.isAdmin = !!logged;
+    });
     if (this.dialogData?.product) {
       // Modal con producto ya cargado
       this.product = this.dialogData.product;
@@ -139,7 +149,11 @@ export class ProductDetailsComponent implements AfterViewInit {
         salesType: this.product?.salesType,
         minPurchase: this.product?.minPurchase,
       });
-      if (this.dialogData.vendor) this.vendor = this.dialogData.vendor;
+      if (this.dialogData.vendor) {
+        this.vendor = this.dialogData.vendor;
+      } else {
+        this.vendor = this.defaultVendor;
+      }
       this.buildSlides(this.product);
       this.extractColors(this.product);
       // Ajustar cantidad inicial según minPurchase
@@ -158,6 +172,16 @@ export class ProductDetailsComponent implements AfterViewInit {
         this.fetchProduct(idParam);
       });
     }
+  }
+
+  openGeneralCart() {
+    this.dialog.open(CartDialogComponent, {
+      data: { mode: 'general' },
+      panelClass: 'cart-dialog-fullscreen',
+      maxWidth: '100vw',
+      width: '100vw',
+      height: '100vh',
+    });
   }
   ngAfterViewInit(): void {
     if (this.carousel && this.slides.length) {
@@ -210,14 +234,13 @@ export class ProductDetailsComponent implements AfterViewInit {
   }
 
   private buildSlides(detail: any) {
-    // Normaliza y deduplica URLs; corrige http->https si la app está bajo https
+    // Normaliza URLs; no deduplicamos para respetar múltiples tomas aunque sean iguales
     const rawImages: string[] = Array.isArray(detail.images)
       ? detail.images.filter(Boolean)
       : detail.images && typeof detail.images === 'string'
       ? [detail.images]
       : [];
-    const unique = [...new Set(rawImages)];
-    const normalized = unique.map((u) => this.normalizeImageUrl(u));
+    const normalized = rawImages.map((u) => this.normalizeImageUrl(u));
     const selected =
       normalized.length > 0
         ? normalized.slice(0, 10)
@@ -231,8 +254,6 @@ export class ProductDetailsComponent implements AfterViewInit {
     console.log(
       '[BUILD SLIDES] raw:',
       rawImages,
-      'unique:',
-      unique,
       'normalized:',
       normalized,
       'slides:',
@@ -338,7 +359,8 @@ export class ProductDetailsComponent implements AfterViewInit {
   }
 
   addToCart() {
-    if (this.product && this.vendor) {
+    if (this.product) {
+      this.vendor = this.vendor || this.defaultVendor;
       console.log('ProductDetailsComponent.addToCart called with:', {
         product: this.product,
         vendor: this.vendor,
@@ -349,25 +371,25 @@ export class ProductDetailsComponent implements AfterViewInit {
       // Agregar al carrito usando el servicio, pasando la cantidad
       this.cartService.addToCart(
         this.product,
-        this.vendor.id,
-        this.vendor.name,
+        this.vendor?.id || 'admin',
+        this.vendor?.name || 'Admin',
         this.quantity,
         this.selectedColorName || undefined,
         this.selectedSizes.length ? this.selectedSizes : undefined
       );
-      // Mostrar modal de confirmación
+      // Mostrar modal de confirmación con acción a carrito
       this.dialog.open(ConfirmDialogComponent, {
         data: {
           title: 'Producto agregado',
           message: `${this.product.product_name} ha sido agregado al carrito correctamente.`,
           buttonText: 'Aceptar',
+          showCancel: false,
+          extraButton: {
+            label: 'Ir al carrito',
+            action: () => this.openGeneralCart(),
+          },
         },
         width: '400px',
-      });
-    } else {
-      console.error('Cannot add to cart: product or vendor is missing', {
-        product: this.product,
-        vendor: this.vendor,
       });
     }
   }
@@ -446,7 +468,7 @@ export class ProductDetailsComponent implements AfterViewInit {
   ) {
     this.currentProductId = mapped.id || (mapped as any)._id || fallbackId || null;
     this.product = mapped;
-    this.vendor = mapped.vendorMeta;
+    this.vendor = mapped.vendorMeta || this.defaultVendor;
     this.selectedColorName = null;
     this.selectedColorHex = null;
     this.buildSlides(mapped);
@@ -469,5 +491,74 @@ export class ProductDetailsComponent implements AfterViewInit {
 
   isSizeSelected(size: string): boolean {
     return this.selectedSizes.includes(size);
+  }
+
+  editProduct() {
+    const id = this.currentProductId || this.product?._id || this.product?.id;
+    if (!id || !this.product) return;
+    const ref = this.dialog.open(ProductCreateComponent, {
+      data: { product: this.product },
+      width: '760px',
+      maxWidth: '96vw',
+      panelClass: 'product-edit-dialog',
+    });
+
+    ref.afterClosed().subscribe((result) => {
+      if (result?.updated && this.currentProductId) {
+        this.fetchProduct(this.currentProductId);
+      }
+    });
+  }
+
+  confirmDelete() {
+    if (!this.currentProductId) return;
+    const ref = this.dialog.open(ConfirmDialogComponent, {
+      data: {
+        title: 'Eliminar producto',
+        message: '¿Seguro que deseas eliminar este producto? Esta acción no se puede deshacer.',
+        buttonText: 'Eliminar',
+        cancelText: 'Cancelar',
+        showCancel: true,
+      },
+      width: '380px',
+    });
+
+    ref.afterClosed().subscribe((confirmed) => {
+      if (confirmed) {
+        this.deleteProduct(this.currentProductId!);
+      }
+    });
+  }
+
+  private deleteProduct(id: string) {
+    this.productApi.deleteProduct(id).subscribe({
+      next: () => {
+        this.dialog.open(ConfirmDialogComponent, {
+          data: {
+            title: 'Producto eliminado',
+            message: 'El producto fue eliminado correctamente.',
+            buttonText: 'Aceptar',
+            showCancel: false,
+          },
+          width: '340px',
+        });
+        if (this.dialogRef) {
+          this.dialogRef.close();
+        }
+        this.router.navigateByUrl('/');
+      },
+      error: (err) => {
+        console.error('Error deleting product', err);
+        this.dialog.open(ConfirmDialogComponent, {
+          data: {
+            title: 'Error al eliminar',
+            message: 'No se pudo eliminar el producto. Intenta nuevamente.',
+            buttonText: 'Cerrar',
+            showCancel: false,
+          },
+          width: '360px',
+        });
+      },
+    });
   }
 }

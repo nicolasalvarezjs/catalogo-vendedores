@@ -12,6 +12,10 @@ export interface BackendCategory {
   id: string;
 }
 
+export interface CreateCategoryPayload {
+  name: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class CategoryApiService {
   private baseUrl = `${API_BASE_URL}/category`;
@@ -20,5 +24,9 @@ export class CategoryApiService {
   // El endpoint /category/read devuelve listado de categorías
   getCategories(): Observable<BackendCategory[]> {
     return this.http.get<BackendCategory[]>(`${this.baseUrl}/read`);
+  }
+
+  createCategory(payload: CreateCategoryPayload): Observable<BackendCategory> {
+    return this.http.post<BackendCategory>(`${this.baseUrl}/create`, payload);
   }
 }
