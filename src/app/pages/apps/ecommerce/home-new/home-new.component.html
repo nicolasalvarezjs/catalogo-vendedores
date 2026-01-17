@@ -61,10 +61,7 @@
           <div class="featured-info">
             <div class="featured-title">{{ product.product_name }}</div>
             <div class="featured-price">
-              {{
-                product.base_price
-                  | currency : "EUR" : "symbol" : "1.2-2" : "es"
-              }}
+              {{ product.base_price | monedaARS }}
             </div>
             <div class="featured-vendor" *ngIf="product.vendorId">
               by {{ getVendorName(product.vendorId) }}

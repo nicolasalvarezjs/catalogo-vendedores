@@ -6,11 +6,12 @@ import { ProductApiService } from 'src/app/services/api/product-api.service';
 import { VendorApiService } from 'src/app/services/api/vendor-api.service';
 import type { BackendProduct } from 'src/app/services/api/product-api.service';
 import type { BackendVendor } from 'src/app/services/api/vendor-api.service';
+import { MonedaArsPipe } from 'src/app/pipe/moneda-ars.pipe';
 
 @Component({
   selector: 'app-home-new',
   standalone: true,
-  imports: [CommonModule, MatIconModule],
+  imports: [CommonModule, MatIconModule, MonedaArsPipe],
   templateUrl: './home-new.component.html',
   styleUrls: ['./home-new.component.scss'],
 })

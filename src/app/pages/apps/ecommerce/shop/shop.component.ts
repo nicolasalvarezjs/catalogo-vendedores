@@ -14,6 +14,7 @@ import { CategoryApiService, BackendCategory } from 'src/app/services/api/catego
 import { ShopStateService } from './shop-state.service';
 import { ProductDetailsComponent } from '../product-details/product-details.component';
 import { AuthService } from 'src/app/services/auth.service';
+import { MonedaArsPipe } from 'src/app/pipe/moneda-ars.pipe';
 
 @Component({
   selector: 'app-shop',
@@ -22,6 +23,7 @@ import { AuthService } from 'src/app/services/auth.service';
     IconModule,
     CommonModule,
     FormsModule,
+    MonedaArsPipe,
   ],
   templateUrl: './shop.component.html',
   styleUrl: './shop.component.scss',

@@ -20,9 +20,6 @@
           <button *ngIf="isLogged" mat-stroked-button color="primary" (click)="goAdmin()">
             Ir a admin
           </button>
-          <button mat-icon-button class="wishlist-btn" matTooltip="Favoritos">
-            <mat-icon>favorite_border</mat-icon>
-          </button>
           <button
             mat-icon-button
             class="cart-btn"
@@ -137,7 +134,7 @@
               <div class="product-meta-line d-flex align-items-center justify-content-between m-b-8">
                 <div class="price-line d-flex align-items-center">
                   <h6 class="price-current f-s-16 f-w-600 m-0 text-primary">
-                    {{ product.base_price | number:'1.0-0' }}
+                    {{ product.base_price | monedaARS }}
                   </h6>
                 </div>
               </div>
@@ -155,14 +152,7 @@
         </div>
         } @empty {
         <div class="product-masonry-item">
-          <div class="text-center p-4 m-t-30">
-            <img src="assets/images/products/empty-shopping-cart.svg" width="200" height="200" />
-            <div class="f-s-48 f-w-600">No hay productos</div>
-            <div class="f-s-14 f-w-500">El producto que buscas no está disponible.</div>
-            <button mat-flat-button (click)="resetAndReload()" class="m-t-10">
-              Intentar nuevamente
-            </button>
-          </div>
+          <div class="text-center p-4 m-t-30 f-s-16 f-w-600">No hay productos</div>
         </div>
         }
         }
